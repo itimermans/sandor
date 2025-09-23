@@ -21,6 +21,7 @@
 import React from 'react'
 import ExamplePlotlyChart from '../ExamplePlotlyChart'
 import PlaceholderPanel from '../panels/PlaceholderPanel'
+import DataViewer from '../panels/DataViewer'
 
 /**
  * Central registry of all component types supported by grid layouts.
@@ -29,6 +30,7 @@ import PlaceholderPanel from '../panels/PlaceholderPanel'
 export const GRID_COMPONENT_TYPES = {
     PLOTLY_CHART: 'plotly-chart',
     PLACEHOLDER: 'placeholder-panel',
+    DATA_VIEWER: 'data-viewer',
     // Add new component types here as you develop them:
     // DATA_TABLE: 'data-table',
     // FILE_BROWSER: 'file-browser',
@@ -45,6 +47,28 @@ export const GRID_COMPONENT_CONFIGS = {
         component: ExamplePlotlyChart,
         displayName: 'Plotly Chart',
         description: 'Interactive data visualization chart',
+        defaultProps: {
+            index: 1
+        },
+        // Grid layout specific properties
+        grid: {
+            defaultSize: { w: 6, h: 4 }, // width: 6 columns, height: 4 rows
+            minSize: { w: 3, h: 2 },
+            maxSize: { w: 12, h: 8 },
+            resizable: true,
+            draggable: true
+        },
+        // Future layout system properties can be added here
+        // dock: { ... }, // For docking layouts
+        // split: { ... }, // For split-pane layouts
+        icon: '📊',
+        category: 'visualization'
+    },
+
+    [GRID_COMPONENT_TYPES.DATA_VIEWER]: {
+        component: DataViewer,
+        displayName: 'Data Viewer',
+        description: 'Plotly-based chart generator from dataframe',
         defaultProps: {
             index: 1
         },

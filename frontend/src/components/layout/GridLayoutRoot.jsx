@@ -60,11 +60,17 @@ export default function GridLayoutRoot({
                 },
                 displayName: 'Welcome',
                 icon: '👋'
-            }
+            },
+            'initial-viewer': {
+                componentType: GRID_COMPONENT_TYPES.DATA_VIEWER,
+                componentProps: { index: 2 },
+                displayName: 'Data Viewer',
+                icon: '📊'
+            },
         },
         layouts: {
             lg: [
-                { i: 'main-chart', x: 0, y: 0, w: 10, h: 10 },    // Large chart on left
+                { i: 'initial-viewer', x: 0, y: 0, w: 10, h: 16 },    // Large chart on left
                 // { i: 'welcome', x: 8, y: 0, w: 4, h: 6 }        // Welcome panel on right
             ]
         },

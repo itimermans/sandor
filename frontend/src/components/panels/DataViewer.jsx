@@ -1,22 +1,19 @@
-import React, { useMemo, useCallback, useEffect, useRef } from 'react'
+import React, { useMemo, useCallback, useEffect, useRef, useState } from 'react'
 import Plot from 'react-plotly.js'
 
 /**
- * ExamplePlotlyChart.jsx
- * 
- * Self-contained Plotly chart component designed for Golden Layout integration.
- * Features:
- * - Instance-aware data generation based on index prop
- * - Responsive sizing with automatic resize handling
- * - Clean separation from Golden Layout logic
- * - Easy to test independently
+ * DataViewer.jsx
+ * Ploty-based chart generator from dataframe. 
+ * Allows users to plot xy traces selecting columns from a dataframe
  */
 
-export default function ExamplePlotlyChart({ index = 1, ...otherProps }) {
+export default function DataViewer({ index = 1, ...otherProps }) {
     const plotRef = useRef(null)
     const containerRef = useRef(null)
 
-    // Generate unique data for each chart instance
+    // State for trace colors
+    const [colorA, setColorA] = useState('#007bff')
+    const [colorB, setColorB] = useState('#28a745')
     const seedOffset = index * 0.15
     const data = useMemo(() => [
         {
@@ -25,8 +22,8 @@ export default function ExamplePlotlyChart({ index = 1, ...otherProps }) {
             type: 'scatter',
             mode: 'lines+markers',
             name: `Series A ${index}`,
-            line: { color: '#007bff' },
-            marker: { size: 8 }
+            line: { color: colorA },
+            marker: { size: 8, color: colorA }
         },
         {
             x: [1, 2, 3, 4, 5],
@@ -34,10 +31,10 @@ export default function ExamplePlotlyChart({ index = 1, ...otherProps }) {
             type: 'scatter',
             mode: 'lines+markers',
             name: `Series B ${index}`,
-            line: { color: '#28a745' },
-            marker: { size: 8 }
+            line: { color: colorB },
+            marker: { size: 8, color: colorB }
         },
-    ], [index, seedOffset])
+    ], [index, seedOffset, colorA, colorB])
 
     // Responsive layout configuration
     const layout = useMemo(() => ({
@@ -124,17 +121,48 @@ export default function ExamplePlotlyChart({ index = 1, ...otherProps }) {
     const plotContainerStyle = {
         flex: 1,
         padding: '8px',
-        minHeight: 0 // Important for flex child to allow shrinking
+        minHeight: 0, // Important for flex child to allow shrinking
+        maxHeight: '60%' // Reserve space for trace selections below
+    }
+
+    const traceSelectorStyle = {
+        height: '200px',
+        padding: '12px',
+        backgroundColor: 'white',
+        borderTop: '1px solid #e9ecef',
+        overflowY: 'auto'
     }
 
     return (
         <div ref={containerRef} style={containerStyle}>
             <div style={headerStyle}>
-                <strong>Plotly Chart #{index}</strong>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <strong>Plotly Chart #{index}</strong>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                            Series A:
+                            <input
+                                type="color"
+                                value={colorA}
+                                onChange={(e) => setColorA(e.target.value)}
+                                style={{ marginLeft: '4px', width: '30px', height: '20px', border: 'none', cursor: 'pointer' }}
+                            />
+                        </label>
+                        <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                            Series B:
+                            <input
+                                type="color"
+                                value={colorB}
+                                onChange={(e) => setColorB(e.target.value)}
+                                style={{ marginLeft: '4px', width: '30px', height: '20px', border: 'none', cursor: 'pointer' }}
+                            />
+                        </label>
+                    </div>
+                </div>
                 {Object.keys(otherProps).length > 0 && (
-                    <span style={{ marginLeft: '16px', fontSize: '12px' }}>
+                    <div style={{ marginTop: '8px', fontSize: '12px' }}>
                         Props: {JSON.stringify(otherProps)}
-                    </span>
+                    </div>
                 )}
             </div>
             <div style={plotContainerStyle}>
@@ -146,6 +174,9 @@ export default function ExamplePlotlyChart({ index = 1, ...otherProps }) {
                     style={{ width: '100%', height: '100%' }}
                     useResizeHandler={true}
                 />
+            </div>
+            <div style={traceSelectorStyle}>
+                {/* Trace selections will go here */}
             </div>
         </div>
     )
