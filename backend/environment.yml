@@ -1,0 +1,22 @@
+name: sandor-backend
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - fastapi>=0.95
+    - uvicorn[standard]>=0.22
+    - pydantic>=2.0
+    - pandas
+    - pyarrow
+    - aiofiles
+    - pytest
+    - python-multipart
+    - black
+    - isort
+    - flake8
+
+# This environment.yml is optional and provided for conda users.
+# The project already provides a pip-based install via dev-install.sh which
+# creates/uses a virtualenv `.venv` in the `backend/` folder.

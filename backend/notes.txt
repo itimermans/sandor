@@ -1,0 +1,46 @@
+Explanation of important pieces (walkthrough)
+App factory and mounting
+
+app.py
+create_app(): constructs the FastAPI app and wires routers.
+CORS middleware is enabled for development (allowing all origins). For production, tighten allowed origins.
+Logging configured centrally via sandor.logging.configure_logging().
+Standard module-level app created so you can run: uvicorn sandor.api.app:app --reload --port 8000
+Health endpoint
+
+health.py
+Simple GET /health/ route returning a small JSON payload. Cheap and deterministic for monitors.
+Data endpoints example
+
+data.py
+POST /data/upload accepts an UploadFile and delegates handling to sandor.services.data_service.handle_upload.
+The router demonstrates how the API layer defers heavy work to the service layer and how to respond with a dataset id.
+Pydantic models
+
+data_models.py
+Uses Pydantic BaseModel (v2-compatible style) to validate responses. Keep wire-format schemas small.
+Service layer
+
+data_service.py
+handle_upload(upload: UploadFile) is an async function that:
+Streams the incoming file into a temporary file (avoids reading the whole file into memory).
+If file appears to be CSV or .txt, reads in chunks (chunksize=100k) using pandas and writes to Parquet via pyarrow.
+For append behavior it currently uses a simple read/concat/write approach — explicitly documented as inefficient for large volumes.
+Returns a UUID-style dataset id that maps to a stored file under backend/storage/datasets.
+Rationale: This demonstrates chunked reading and conversion, but I noted that for production you'd want pyarrow.ParquetWriter or a Dask/Ray pipeline for large datasets or streaming row group writes.
+Storage helpers
+
+__init__.py
+Minimal helper list_datasets() to list stored items. Points out replacement with object storage and ACLs in production.
+Logging
+
+logging.py
+Centralizes logging setup and formatter.
+Keeps it simple for development, documented to extend for JSON structured logging and external sinks.
+environment.yml
+
+Provides an optional conda env specification (Python 3.12) and common packages used by the scaffold.
+dev-install.sh
+
+Installs editable package, dev extras, and ensures fastapi/uvicorn available.
+Prints the recommended uvicorn command for development.

@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug sandor backend (uvicorn)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/.venv/bin/uvicorn",
+            "args": [
+                "sandor_backend.api.app:app"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/backend/src"
+            },
+            "cwd": "${workspaceFolder}",
+            "justMyCode": true
+        },
+        {
+            "name": "Run sandor backend (no debugger)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/.venv/bin/uvicorn",
+            "args": [
+                "sandor_backend.api.app:app",
+                "--reload",
+                "--port",
+                "8000"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/backend/src"
+            },
+            "cwd": "${workspaceFolder}",
+            "justMyCode": true
+        }
+    ]
+}

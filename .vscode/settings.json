@@ -1,0 +1,67 @@
+{
+    // Remove any hard-coded interpreter path so contributors can select their local interpreter.
+    // Recommended: create a local virtual environment at `.venv` in the workspace root and
+    // select it in VS Code. Example locations:
+    //  - macOS / Linux: `${workspaceFolder}/.venv/bin/python`
+    //  - Windows: `${workspaceFolder}\\.venv\\Scripts\\python.exe`
+    "python-envs.pythonProjects": [],
+    "python.terminal.activateEnvironment": true,
+    // Point VS Code to the backend virtual environment so Pylance can resolve imports.
+    // If your venv is located elsewhere, update this path in your personal settings.
+    "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+    "python.analysis.extraPaths": [
+        "./backend/src"
+    ],
+    "editor.formatOnSave": true,
+    // Windows terminal profiles (kept for Windows users)
+    "terminal.integrated.profiles.windows": {
+        "cmd-no-conda": {
+            "path": "cmd.exe",
+            "args": [
+                "/K",
+                "echo Starting clean cmd without conda"
+            ]
+        },
+        "powershell-no-conda": {
+            "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+            "args": [
+                "-NoProfile"
+            ]
+        }
+    },
+    "terminal.integrated.defaultProfile.windows": "powershell-no-conda",
+    // macOS terminal profiles. Currently unneeded, but kept for reference. 
+    "terminal.integrated.profiles.osx": {
+        "zsh-no-conda": {
+            // macOS default zsh usually lives at /bin/zsh
+            "path": "/bin/zsh",
+            "args": [
+                "--no-rcs"
+            ]
+        }
+    },
+    "terminal.integrated.defaultProfile.osx": "zsh-no-conda",
+    // Linux terminal profiles
+    "terminal.integrated.profiles.linux": {
+        "bash-no-conda": {
+            "path": "/bin/bash",
+            "args": [
+                "--noprofile",
+                "--norc"
+            ]
+        },
+        "zsh-no-conda": {
+            "path": "/bin/zsh",
+            "args": [
+                "--no-rcs"
+            ]
+        }
+    },
+    "terminal.integrated.defaultProfile.linux": "bash-no-conda",
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    // Ensure pytest picks up tests under backend/tests
+    "python.testing.pytestArgs": [
+        "./backend/tests"
+    ]
+}

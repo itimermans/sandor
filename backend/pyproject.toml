@@ -1,0 +1,53 @@
+[project]
+name = "sandor_backend"
+# Static version
+version = "0.1.0"
+description = "Tools to extract tabular data and perform structured analysis"
+authors = [
+    { name = "Inigo Timermans" }
+]
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+    "numpy",
+    "pandas",
+    "plotly",
+    "nptdms",
+    "python-multipart",
+    "pinax @ git+https://github.com/itimermans/pinax.git"
+
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "black",
+    "flake8",
+    "isort",
+    "jupyter",
+    "notebook",
+    "ipython",
+    "ipykernel"
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel","setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["sandor_backend*"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+
+## setuptools_scm removed: package version is now specified explicitly above.
