@@ -2,6 +2,77 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Run sandor frontend",
+            "type": "shell",
+            "isBackground": true,
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "windows": {
+                "command": "npm",
+                "args": [
+                    "run",
+                    "dev"
+                ],
+                "options": {
+                    "cwd": "${workspaceFolder}\\frontend"
+                }
+            },
+            "linux": {
+                "command": "npm",
+                "args": [
+                    "run",
+                    "dev"
+                ],
+                "options": {
+                    "cwd": "${workspaceFolder}/frontend"
+                }
+            },
+            "osx": {
+                "command": "npm",
+                "args": [
+                    "run",
+                    "dev"
+                ],
+                "options": {
+                    "cwd": "${workspaceFolder}/frontend"
+                }
+            }
+        },
+        {
+            "label": "Stop sandor frontend",
+            "type": "shell",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "windows": {
+                "command": "powershell",
+                "args": [
+                    "-NoProfile",
+                    "-Command",
+                    "Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }"
+                ]
+            },
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "-lc",
+                    "lsof -ti:5173 | xargs -r kill -9 || true"
+                ]
+            },
+            "osx": {
+                "command": "bash",
+                "args": [
+                    "-lc",
+                    "lsof -ti:5173 | xargs -r kill -9 || true"
+                ]
+            }
+        },
+        {
             "label": "Run sandor backend",
             "type": "shell",
             "isBackground": true,
