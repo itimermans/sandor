@@ -1,0 +1,32 @@
+On components: 
+
+Refactor Complete
+
+- Introduced componentRegistry.js to centralize Golden Layout component type definitions (COMPONENT_TYPES) and factory functions (componentFactories).
+- Added PlaceholderPanel.jsx as a lightweight example for rapid prototyping of new window content.
+- Refactored GoldenLayoutRoot.jsx to:
+- Remove direct imports of content components (now uses registry).
+- Register all component types generically.
+- Provide toolbar buttons: + Plot, + Placeholder.
+- Keep sequential plot indexing and dynamic state passing.
+- Updated ExamplePlotlyChart.jsx to be self-contained, instance-aware (index prop), and responsive (autosize with useResizeHandler).
+- Added thorough inline documentation in componentRegistry.js to guide adding future components.
+
+How To Add a New Window Type
+
+- Create your component, e.g. src/components/panels/DataTablePanel.jsx.
+- Import it in componentRegistry.js.
+- Add a key to COMPONENT_TYPES, e.g. DATA_TABLE: 'data-table'.
+- Add a factory: [COMPONENT_TYPES.DATA_TABLE]: (state) => <DataTablePanel someProp={state.foo} />.
+- From anywhere (modify toolbar in GoldenLayoutRoot), call: layoutRef.current.rootItem.addItem({ type: 'component', componentType: COMPONENT_TYPES.DATA_TABLE, title: 'Data Table', componentState: { foo: 123 } }).
+
+Recommendations
+
+- State Persistence: Save/restore layout.toConfig() in localStorage for session continuity.
+- Error Boundaries: Wrap each factory-rendered component with a React error boundary to avoid one panel crashing the layout.
+- Async Components: For heavier components (e.g., data grid) consider lazy loading with React.lazy inside factory.
+- Resizing Performance: Debounce updateSize() on window resize if many panels open.
+- Theming: Expose a theme toggle (swap Golden Layout theme CSS and pass a theme context to children).
+- Backend Integration: Define a lightweight event bus (e.g., RxJS or a simple EventTarget) for cross-panel interactions (e.g., selecting a dataset broadcasts to all plot panels).
+- Testing: Add unit tests for registry integrity (e.g., ensure all COMPONENT_TYPES have factory entries) and an integration test mounting GoldenLayoutRoot with jsdom.
+Try It
