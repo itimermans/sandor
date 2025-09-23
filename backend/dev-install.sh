@@ -20,6 +20,7 @@ fi
 "$PYTHON_EXEC" -m pip install -e "${SCRIPT_DIR}[dev]"
 
 # Ensure FastAPI and Uvicorn are available for development/run
+# TODO: Put these in dependencies, not here
 "$PYTHON_EXEC" -m pip install 'fastapi>=0.95' 'uvicorn[standard]>=0.22' 'python-multipart'
 
 

@@ -4,14 +4,45 @@
         {
             "label": "Run sandor backend",
             "type": "shell",
-            "command": "${workspaceFolder}/backend/.venv/bin/uvicorn sandor_backend.api.app:app --reload --port 8000",
+            "isBackground": true,
             "presentation": {
                 "reveal": "always",
-                "panel": "dedicated",
-                "clear": false
+                "panel": "dedicated"
             },
-            "isBackground": true,
             "problemMatcher": [],
+            "windows": {
+                "command": "${workspaceFolder}\\backend\\.venv\\Scripts\\python.exe",
+                "args": [
+                    "-m",
+                    "uvicorn",
+                    "sandor_backend.api.app:app",
+                    "--reload",
+                    "--port",
+                    "8000"
+                ]
+            },
+            "linux": {
+                "command": "${workspaceFolder}/backend/.venv/bin/python",
+                "args": [
+                    "-m",
+                    "uvicorn",
+                    "sandor_backend.api.app:app",
+                    "--reload",
+                    "--port",
+                    "8000"
+                ]
+            },
+            "osx": {
+                "command": "${workspaceFolder}/backend/.venv/bin/python",
+                "args": [
+                    "-m",
+                    "uvicorn",
+                    "sandor_backend.api.app:app",
+                    "--reload",
+                    "--port",
+                    "8000"
+                ]
+            },
             "runOptions": {
                 "reevaluateOnRerun": true
             }
@@ -19,13 +50,33 @@
         {
             "label": "Stop sandor backend",
             "type": "shell",
-            "command": "pkill -f 'uvicorn sandor_backend.api.app' || true",
             "presentation": {
                 "reveal": "always",
-                "panel": "shared",
-                "clear": false
+                "panel": "shared"
             },
-            "problemMatcher": []
+            "problemMatcher": [],
+            "windows": {
+                "command": "taskkill",
+                "args": [
+                    "/F",
+                    "/IM",
+                    "uvicorn.exe"
+                ]
+            },
+            "linux": {
+                "command": "pkill",
+                "args": [
+                    "-f",
+                    "uvicorn sandor_backend.api.app"
+                ]
+            },
+            "osx": {
+                "command": "pkill",
+                "args": [
+                    "-f",
+                    "uvicorn sandor_backend.api.app"
+                ]
+            }
         }
     ]
 }

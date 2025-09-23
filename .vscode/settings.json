@@ -6,9 +6,8 @@
     //  - Windows: `${workspaceFolder}\\.venv\\Scripts\\python.exe`
     "python-envs.pythonProjects": [],
     "python.terminal.activateEnvironment": true,
-    // Point VS Code to the backend virtual environment so Pylance can resolve imports.
     // If your venv is located elsewhere, update this path in your personal settings.
-    "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+    //"python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
     "python.analysis.extraPaths": [
         "./backend/src"
     ],
@@ -63,5 +62,6 @@
     // Ensure pytest picks up tests under backend/tests
     "python.testing.pytestArgs": [
         "./backend/tests"
-    ]
+    ],
+    "python.analysis.typeCheckingMode": "standard"
 }
