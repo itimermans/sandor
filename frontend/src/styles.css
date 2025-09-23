@@ -1,21 +1,10 @@
 /* styles.css: minimal styling for the frontend skeleton.
    Explanations are embedded as comments for non-JS developers. */
 
-/*
-    Golden Layout CSS: some package versions place CSS in different locations
-    under node_modules which can cause Vite to fail resolving them. To make
-    the example robust in development we import the Golden Layout CSS from a
-    CDN. This keeps the example working even if the package layout differs.
-
-    If you prefer to ship CSS locally or your package exposes `dist/css/*`,
-    replace these @import lines with local imports or with:
-        @import 'golden-layout/dist/css/goldenlayout-base.css';
-        @import 'golden-layout/dist/css/goldenlayout-light-theme.css';
-
-    CDN choice: jsDelivr points to the NPM package and is generally reliable.
-*/
+/* Temporarily removing Golden Layout CDN imports to debug rendering issues
 @import url('https://cdn.jsdelivr.net/npm/golden-layout@2.4.0/dist/css/goldenlayout-base.css');
 @import url('https://cdn.jsdelivr.net/npm/golden-layout@2.4.0/dist/css/goldenlayout-light-theme.css');
+*/
 
 html,
 body,

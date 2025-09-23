@@ -1,20 +1,26 @@
 import React from 'react'
-import GoldenLayoutRoot from './components/GoldenLayoutRoot'
+import GridLayoutRoot from './components/layout/GridLayoutRoot'
 
-// App.jsx: top-level React component.
-// - Keeps communication with backend minimal for now.
-// - Renders a header and the Plotly example component.
+// Final implementation - React Grid Layout with component registry system
 export default function App() {
+    console.log('App component is rendering with React Grid Layout!')
+
+    const handleLayoutChange = (layout, allLayouts) => {
+        console.log('Layout changed:', { layout, allLayouts })
+        // Here you could save layout to localStorage or send to backend
+    }
+
     return (
         <div className="app-root">
             <header className="app-header">
-                <h1>Sandor Frontend (Vite + React)</h1>
-                <p>Golden Layout container with embedded Plotly chart.</p>
+                <h1>Sandor Frontend - Data Analysis Dashboard</h1>
+                <p>React Grid Layout with clean component separation</p>
             </header>
             <main className="app-main">
-                <div style={{ height: '70vh', minHeight: 400 }}>
-                    <GoldenLayoutRoot />
-                </div>
+                <GridLayoutRoot
+                    onLayoutChange={handleLayoutChange}
+                    style={{ minHeight: '70vh' }}
+                />
             </main>
         </div>
     )

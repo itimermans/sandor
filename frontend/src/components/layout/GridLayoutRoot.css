@@ -1,0 +1,158 @@
+/* GridLayoutRoot.css - Styles for React Grid Layout dashboard */
+
+.grid-layout-root {
+    width: 100%;
+    padding: 20px;
+}
+
+.grid-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.grid-toolbar-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.grid-toolbar-section h3 {
+    margin: 0;
+    font-size: 14px;
+    color: #495057;
+    white-space: nowrap;
+}
+
+.grid-toolbar-button {
+    padding: 8px 12px;
+    border: 1px solid #007bff;
+    background: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.grid-toolbar-button:hover {
+    background: #0056b3;
+    border-color: #0056b3;
+}
+
+.grid-toolbar-button.secondary {
+    background: #6c757d;
+    border-color: #6c757d;
+}
+
+.grid-toolbar-button.secondary:hover {
+    background: #545b62;
+    border-color: #545b62;
+}
+
+.grid-toolbar-button.danger {
+    background: #dc3545;
+    border-color: #dc3545;
+}
+
+.grid-toolbar-button.danger:hover {
+    background: #c82333;
+    border-color: #c82333;
+}
+
+.grid-info {
+    color: #6c757d;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.grid-item {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.grid-item-header {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 500;
+    font-size: 14px;
+    color: #495057;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.grid-item-drag-handle {
+    cursor: move;
+    color: #6c757d;
+    padding: 2px 4px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.grid-item-drag-handle:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.drag-icon {
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: -1px;
+}
+
+.grid-item-title {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.grid-item-remove {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.grid-item-remove:hover {
+    background: #dc3545;
+    color: white;
+    transform: scale(1.1);
+}
+
+.grid-item-content {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
