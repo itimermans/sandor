@@ -2,6 +2,24 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Run sandor full stack",
+            "type": "shell",
+            "command": "echo",
+            "args": [
+                "Starting backend and frontend..."
+            ],
+            "dependsOn": [
+                "Run sandor backend",
+                "Run sandor frontend"
+            ],
+            "dependsOrder": "parallel",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Run sandor frontend",
             "type": "shell",
             "isBackground": true,
@@ -31,10 +49,10 @@
                 }
             },
             "osx": {
-                "command": "npm",
+                "command": "zsh",
                 "args": [
-                    "run",
-                    "dev"
+                    "-c",
+                    "source ~/.zshrc && npm run dev"
                 ],
                 "options": {
                     "cwd": "${workspaceFolder}/frontend"
