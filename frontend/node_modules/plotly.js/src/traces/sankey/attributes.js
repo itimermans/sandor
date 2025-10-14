@@ -286,3 +286,4 @@ var attrs = module.exports = overrideAll({
         description: 'The links of the Sankey plot.',
     }
 }, 'calc', 'nested');
+attrs.transforms = undefined;

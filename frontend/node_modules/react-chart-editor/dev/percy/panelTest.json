@@ -1,0 +1,325 @@
+{
+  "data": [
+    {
+      "x": [
+        1,
+        2,
+        3
+      ],
+      "y": [
+        2,
+        3,
+        4
+      ],
+      "name": "yaxis data",
+      "type": "scatter",
+      "transforms": [
+        {
+          "type": "aggregate",
+          "enabled": true,
+          "groups": [
+            1,
+            2,
+            3
+          ],
+          "groupssrc": "x1",
+          "aggregations": [
+            {
+              "func": "count",
+              "target": "x",
+              "enabled": true
+            }
+          ]
+        }
+      ],
+      "marker": {
+        "color": [
+          1,
+          2,
+          3
+        ],
+        "colorsrc": "x1",
+        "cmin": 1,
+        "cmax": 3,
+        "cauto": true,
+        "colorscale": [
+          [
+            0,
+            "rgb(220,220,220)"
+          ],
+          [
+            0.2,
+            "rgb(245,195,157)"
+          ],
+          [
+            0.4,
+            "rgb(245,160,105)"
+          ],
+          [
+            1,
+            "rgb(178,10,28)"
+          ]
+        ],
+        "autocolorscale": false,
+        "showscale": true,
+        "colorbar": {
+          "ticks": "inside"
+        },
+        "size": [
+          1,
+          2,
+          3
+        ],
+        "sizesrc": "x1",
+        "sizemode": "diameter"
+      },
+      "stackgroup": 1,
+      "mode": "lines+markers+text",
+      "line": {
+        "dash": "solid",
+        "shape": "spline",
+        "color": "rgb(31, 119, 180)"
+      },
+      "hoveron": "points+fills",
+      "uid": "3102ee"
+    },
+    {
+      "x": [
+        1,
+        2,
+        3
+      ],
+      "y": [
+        20,
+        30,
+        40
+      ],
+      "xsrc": "x1",
+      "ysrc": "y2",
+      "name": "yaxis2 data",
+      "yaxis": "y2",
+      "type": "scatter",
+      "error_x": {
+        "visible": true,
+        "type": "percent",
+        "symmetric": true,
+        "value": 10,
+        "valueminus": 10,
+        "copy_ystyle": true
+      },
+      "error_y": {
+        "visible": true,
+        "type": "percent",
+        "symmetric": false,
+        "value": 10,
+        "color": "#1f77b4",
+        "thickness": 2,
+        "width": 4
+      },
+      "transforms": [
+        {
+          "type": "groupby",
+          "groupssrc": "x1",
+          "groups": [],
+          "enabled": true
+        },
+        {
+          "enabled": true,
+          "type": "filter",
+          "target": "x",
+          "targetsrc": "x1",
+          "operation": "[]",
+          "value": [
+            "0",
+            "1"
+          ]
+        }
+      ],
+      "fill": "tozerox",
+      "mode": "lines+markers+text",
+      "marker": {
+        "sizemode": "diameter"
+      },
+      "line": {
+        "dash": "solid",
+        "shape": "spline",
+        "color": "rgb(31, 119, 180)"
+      },
+      "hoveron": "points+fills",
+      "uid": "f4d7ad"
+    }
+  ],
+  "layout": {
+    "title": "Double Y Axis Example",
+    "yaxis2": {
+      "title": "yaxis2 title",
+      "titlefont": {
+        "color": "rgb(148, 103, 189)"
+      },
+      "tickfont": {
+        "color": "rgb(148, 103, 189)"
+      },
+      "overlaying": "y",
+      "side": "right",
+      "type": "linear",
+      "range": [
+        17.77777777777778,
+        22.22222222222222
+      ],
+      "autorange": true
+    },
+    "annotations": [
+      {
+        "text": "hodor"
+      },
+      {
+        "text": "rodoh"
+      }
+    ],
+    "xaxis": {
+      "type": "date",
+      "range": [
+        "1969-12-31 19:00:00.001",
+        "1969-12-31 19:00:00.0011"
+      ],
+      "autorange": true,
+      "showline": true,
+      "automargin": false,
+      "side": "clockwise",
+      "ticks": "inside",
+      "rangeslider": {
+        "visible": true,
+        "yaxis": {
+          "rangemode": "match"
+        },
+        "autorange": true,
+        "range": [
+          "1969-12-31 19:00:00.001",
+          "1969-12-31 19:00:00.0011"
+        ],
+        "yaxis2": {
+          "rangemode": "match"
+        }
+      },
+      "rangeselector": {
+        "visible": true,
+        "buttons": [
+          {
+            "label": "b1",
+            "step": "year"
+          },
+          {
+            "label": "b2",
+            "step": "month"
+          }
+        ]
+      },
+      "showspikes": true
+    },
+    "yaxis": {
+      "range": [
+        1.9863013698630136,
+        4.013698630136986
+      ],
+      "autorange": true,
+      "type": "linear"
+    },
+    "autosize": true,
+    "shapes": [
+      {
+        "text": "Shape 0",
+        "line": {
+          "color": "#444444"
+        },
+        "fillcolor": "#7F7F7F",
+        "opacity": 0.3,
+        "visible": true
+      }
+    ],
+    "images": [
+      {
+        "text": "Image 1",
+        "sizex": 0.1,
+        "sizey": 0.1,
+        "x": 0.5,
+        "y": 0.5,
+        "source": "data:image/bmp;base64,Qk12AAAAAAAAADYAAAAoAAAABAAAAPz///8BACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/w=="
+      }
+    ],
+    "sliders": [
+      {
+        "active": 2,
+        "steps": [
+          {
+            "label": "red",
+            "method": "restyle",
+            "args": [
+              {
+                "line.color": "red"
+              }
+            ]
+          },
+          {
+            "label": "orange",
+            "method": "restyle",
+            "args": [
+              {
+                "line.color": "orange"
+              }
+            ]
+          }
+        ],
+        "visible": true,
+        "x": 0.5,
+        "len": 0.5,
+        "xanchor": "right",
+        "y": -0.1,
+        "yanchor": "top",
+        "currentvalue": {
+          "visible": false
+        },
+        "transition": {
+          "duration": 150,
+          "easing": "cubic-in-out"
+        },
+        "pad": {
+          "r": 20,
+          "t": 60
+        },
+        "font": {}
+      }
+    ],
+    "updatemenus": [
+      {
+        "buttons": [
+          {
+            "method": "restyle",
+            "args": [
+              "line.color",
+              "red"
+            ],
+            "label": "<span style='color:red'>red</span><br>color"
+          },
+          {
+            "method": "restyle",
+            "args": [
+              "line.color",
+              "blue"
+            ],
+            "label": "<span style='color:blue'>blue</span><br>color"
+          },
+          {
+            "method": "restyle",
+            "args": [
+              "line.color",
+              "green"
+            ],
+            "label": "<span style='color:green'>green</span><br>trace<br>color"
+          }
+        ],
+        "active": 1
+      }
+    ]
+  },
+  "frames": []
+}

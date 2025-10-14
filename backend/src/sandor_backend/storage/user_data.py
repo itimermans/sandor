@@ -38,19 +38,27 @@ def _make_example(n: int = 10000) -> pd.DataFrame:
         {
             "time": np.arange(n, dtype=np.float64),
             "y0": rng.standard_normal(n).cumsum(),
-            "y1": rng.standard_normal(n).cumsum(),
+            "y1": 1000 + rng.standard_normal(n).cumsum(),
         }
     )
 
 
-DATA["example1"] = _make_example(10000)
-DATA["example2"] = _make_example(20000)
-DATA["example3"] = _make_example(30000)
-DATA["example4"] = _make_example(15000)
-DATA["example5"] = _make_example(25000)
-DATA["example6"] = _make_example(35000)
+# DATA["example1"] = _make_example(10000)
+# DATA["example2"] = _make_example(20000)
+# DATA["example3"] = _make_example(30000)
+# DATA["example4"] = _make_example(15000)
+# DATA["example5"] = _make_example(25000)
+# DATA["example6"] = _make_example(35000)
 
 
-DATA["manual"] = pd.DataFrame(
-    {"x": [1, 2, 3, 4, 5], "y": [10, 15, 13, 17, 14], "z": [5, 3, 6, 2, 7]}
+DATA["manual1"] = pd.DataFrame(
+    {"x": [1, 2, 3, 4, 5], "y": [10, 10, 10, 10, 10], "z": [5, 3, 6, 2, 7]}
+)
+
+DATA["manual2"] = pd.DataFrame(
+    {"x": [1, 2, 3, 4, 5], "y": [20, 30, 40, 50, 60], "z": [5, 3, 6, 2, 7]}
+)
+
+DATA["manual3"] = pd.DataFrame(
+    {"x": [1, 2, 3, 4, 5], "y": [-10, -10, -10, -10, -10], "z": [5, 3, 6, 2, 7]}
 )

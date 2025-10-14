@@ -70,3 +70,4 @@ colorScaleAttrs('', {
 }), 'calc', 'nested');
 
 attrs.x.editType = attrs.y.editType = attrs.z.editType = attrs.value.editType = 'calc+clearAxisTypes';
+attrs.transforms = undefined;

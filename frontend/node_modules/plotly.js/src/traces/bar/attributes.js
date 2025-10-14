@@ -227,4 +227,13 @@ module.exports = {
         editType: 'style'
     },
     zorder: scatterAttrs.zorder,
+
+    _deprecated: {
+        bardir: {
+            valType: 'enumerated',
+            editType: 'calc',
+            values: ['v', 'h'],
+            description: 'Renamed to `orientation`.'
+        }
+    }
 };

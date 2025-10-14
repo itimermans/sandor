@@ -6,11 +6,13 @@ import { parseArrowToColumns } from '../../lib/arrow/utils.js';
 
 // Skeleton for a complex DataFrameViewer component
 const DataFrameViewer = ({ index = 1 }) => {
-    // Backend-fed dataset metadata and data
-    const [datasets, setDatasets] = useState([]);
-    const [datasetId, setDatasetId] = useState('');
-    const [columns, setColumns] = useState([]);
-    const [table, setTable] = useState({});
+    // Backend-fed dataset metadata and data cache
+    const [datasets, setDatasets] = useState([]); // array of { dataset_id, columns }
+    const [datasetColumnsMap, setDatasetColumnsMap] = useState({}); // { [datasetId]: string[] }
+    const [tableCache, setTableCache] = useState({}); // { [datasetId]: { [col]: array } }
+
+    // Dynamic traces state: [{ datasetId, x, y, name, color }]
+    const [traces, setTraces] = useState([]);
 
     useEffect(() => {
         let cancelled = false;
@@ -20,9 +22,16 @@ const DataFrameViewer = ({ index = 1 }) => {
                 if (!payload || !Array.isArray(payload) || payload.length === 0) return;
                 if (cancelled) return;
                 setDatasets(payload);
-                const preferred = payload.find(d => d.dataset_id === 'ONE') || payload[0];
-                setDatasetId(preferred.dataset_id);
-                setColumns(preferred.columns);
+                const map = {};
+                payload.forEach(d => { map[d.dataset_id] = d.columns; });
+                setDatasetColumnsMap(map);
+                // Initialize with a single default trace: first dataset, first two columns
+                const d0 = payload[0];
+                if (d0 && d0.columns && d0.columns.length > 0) {
+                    const x0 = d0.columns[0];
+                    const y0 = d0.columns[1] || d0.columns[0];
+                    setTraces([{ datasetId: d0.dataset_id, x: x0, y: y0, name: 'Trace 1', color: '#1f77b4' }]);
+                }
             } catch (err) {
                 // eslint-disable-next-line no-console
                 console.error('Failed to load datasets', err);
@@ -31,24 +40,23 @@ const DataFrameViewer = ({ index = 1 }) => {
         return () => { cancelled = true };
     }, []);
 
-    // User selections for X/Y columns
-    const [xCol, setXCol] = useState('');
-    const [yCol, setYCol] = useState('');
-
     const [figure, setFigure] = useState(() => ({
         data: [
             {
-                x: table['Time'] || [],
-                y: table['A'] || [],
+                x: [],
+                y: [],
                 type: 'scattergl',
                 mode: 'lines',
-                name: `A vs Time`,
+                name: `Trace 1`,
+                line: { color: '#1f77b4' },
             }
         ],
         layout: {
             autosize: true,
             title: `Dataset`,
             showlegend: true,
+            // Keep user UI interactions (zoom, legend visibility) across updates
+            uirevision: 'dfv-1',
         },
         config: {
             responsive: true,
@@ -59,9 +67,10 @@ const DataFrameViewer = ({ index = 1 }) => {
         revision: 0
     }));
 
-    const ensureColumns = useCallback(async (neededCols) => {
+    const ensureColumns = useCallback(async (datasetId, neededCols) => {
         if (!datasetId) return {};
-        const missing = neededCols.filter(c => !(c in table));
+        const dsCache = tableCache[datasetId] || {};
+        const missing = neededCols.filter(c => !(c in dsCache));
         if (missing.length === 0) return {};
         const desc = {
             dataset_id: datasetId,
@@ -71,51 +80,59 @@ const DataFrameViewer = ({ index = 1 }) => {
         };
         const buf = await TransportClient.fetchSlice(desc);
         const cols = parseArrowToColumns(buf);
-        setTable(prev => ({ ...prev, ...cols }));
+        setTableCache(prev => ({ ...prev, [datasetId]: { ...(prev[datasetId] || {}), ...cols } }));
         return cols;
-    }, [datasetId, table]);
+    }, [tableCache]);
 
-    // Load data when dataset/columns change
+    // Sync figure with traces: ensure data is loaded and update Plotly traces
     useEffect(() => {
         let cancelled = false;
-        if (!datasetId || columns.length === 0) return;
-        const defaultX = columns[0];
-        const defaultY = columns[1] || columns[0];
-        // Reset X/Y to dataset-specific defaults to avoid stale selections
-        setXCol(defaultX);
-        setYCol(defaultY);
-        // Clear previously cached table to prevent mixing datasets
-        setTable({});
+        if (!traces.length || !datasets.length) return;
         (async () => {
             try {
-                const desc = {
-                    dataset_id: datasetId,
-                    columns: Array.from(new Set([defaultX, defaultY])),
-                    row_range: [0, 200000],
-                    format_hint: 'arrow',
-                };
-                const buf = await TransportClient.fetchSlice(desc);
-                const cols = parseArrowToColumns(buf);
-                if (cancelled) return;
-                setTable(cols);
-                setFigure(f => ({
-                    ...f,
-                    data: f.data.map((t, i) => i === 0 ? {
-                        ...t,
-                        x: cols[defaultX] || [],
-                        y: cols[defaultY] || [],
-                        name: `${defaultY} vs ${defaultX}`,
-                    } : t),
-                    layout: { ...f.layout, title: `${datasetId}: ${defaultY} vs ${defaultX}` },
-                    revision: f.revision + 1,
-                }));
+                // Ensure needed columns exist in cache and accumulate a local merged cache
+                const mergedCache = { ...tableCache };
+                for (let i = 0; i < traces.length; i++) {
+                    const tr = traces[i];
+                    const cols = datasetColumnsMap[tr.datasetId] || [];
+                    if (!cols.length) continue;
+                    const fetched = await ensureColumns(tr.datasetId, [tr.x, tr.y]);
+                    if (fetched && Object.keys(fetched).length) {
+                        mergedCache[tr.datasetId] = {
+                            ...(mergedCache[tr.datasetId] || {}),
+                            ...fetched,
+                        };
+                    }
+                    if (cancelled) return;
+                }
+                // Build figure.data from traces and cache
+                setFigure(f => {
+                    const newData = traces.map((tr, i) => {
+                        const dsCache = (mergedCache[tr.datasetId] || tableCache[tr.datasetId]) || {};
+                        const prev = f.data[i] || {};
+                        return {
+                            x: dsCache[tr.x] || [],
+                            y: dsCache[tr.y] || [],
+                            type: 'scattergl',
+                            mode: 'lines',
+                            name: tr.name || `Trace ${i + 1}`,
+                            line: { color: tr.color || '#1f77b4' },
+                            // Preserve legend visibility state if user toggled
+                            visible: prev.visible,
+                        };
+                    });
+                    const newTitle = traces[0]
+                        ? `${traces[0].datasetId}: ${traces[0].y} vs ${traces[0].x}`
+                        : 'Dataset';
+                    return { ...f, data: newData, layout: { ...f.layout, title: newTitle }, revision: f.revision + 1 };
+                });
             } catch (err) {
                 // eslint-disable-next-line no-console
-                console.error('Failed to fetch slice', err);
+                console.error('Failed to sync traces', err);
             }
         })();
         return () => { cancelled = true };
-    }, [datasetId, columns]);
+    }, [traces, datasets, datasetColumnsMap, tableCache, ensureColumns]);
 
     // Event handlers for future extensibility
     const handleInitialized = useCallback((fig, graphDiv) => {
@@ -176,86 +193,101 @@ const DataFrameViewer = ({ index = 1 }) => {
             revision: f.revision + 1
         }));
     };
-    const handleTraceTypeChange = (idx, type) => {
-        setFigure(f => {
-            const newData = f.data.map((trace, i) => i === idx ? { ...trace, type } : trace);
-            return { ...f, data: newData, revision: f.revision + 1 };
+    // Trace row change handlers
+    const updateTrace = (idx, patch) => {
+        setTraces(ts => ts.map((t, i) => (i === idx ? { ...t, ...patch } : t)));
+    };
+    const onDatasetChange = (idx, newDatasetId) => {
+        const cols = datasetColumnsMap[newDatasetId] || [];
+        const x = cols[0];
+        const y = cols[1] || cols[0];
+        updateTrace(idx, { datasetId: newDatasetId, x, y });
+        // no need to clear cache globally; ensureColumns will fetch if missing
+    };
+    const onXChange = (idx, newX) => updateTrace(idx, { x: newX });
+    const onYChange = (idx, newY) => updateTrace(idx, { y: newY });
+    const onNameChange = (idx, newName) => updateTrace(idx, { name: newName });
+    const onColorChange = (idx, newColor) => updateTrace(idx, { color: newColor });
+    const removeTrace = (idx) => {
+        setTraces(ts => {
+            const next = ts.filter((_, i) => i !== idx);
+            if (next.length === 0 && datasets.length) {
+                // keep at least one trace with defaults
+                const d0 = datasets[0];
+                const cols = d0?.columns || [];
+                const x = cols[0];
+                const y = cols[1] || cols[0];
+                return [{ datasetId: d0.dataset_id, x, y, name: 'Trace 1', color: '#1f77b4' }];
+            }
+            return next;
         });
     };
-
-    const handleXColChange = async (e) => {
-        const name = e.target.value;
-        setXCol(name);
-        const fetched = await ensureColumns([name, yCol]);
-        const cols = { ...table, ...fetched };
-        setFigure(f => ({
-            ...f,
-            data: f.data.map((t, i) => i === 0 ? { ...t, x: cols[name] || [], name: `${yCol} vs ${name}` } : t),
-            revision: f.revision + 1,
-        }));
+    const addTrace = () => {
+        if (!datasets.length) return;
+        const d0 = datasets[0];
+        const cols = d0.columns || [];
+        const x = cols[0];
+        const y = cols[1] || cols[0];
+        setTraces(ts => ([...ts, { datasetId: d0.dataset_id, x, y, name: `Trace ${ts.length + 1}`, color: defaultColors[(ts.length) % defaultColors.length] }]));
     };
 
-    const handleYColChange = async (e) => {
-        const name = e.target.value;
-        setYCol(name);
-        const fetched = await ensureColumns([xCol, name]);
-        const cols = { ...table, ...fetched };
-        setFigure(f => ({
-            ...f,
-            data: f.data.map((t, i) => i === 0 ? { ...t, y: cols[name] || [], name: `${name} vs ${xCol}` } : t),
-            revision: f.revision + 1,
-        }));
-    };
+    const defaultColors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'];
 
     // Tab content renderers
     const renderDataTab = () => (
         <div>
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-                <label>
-                    <strong style={{ marginRight: 8 }}>X column:</strong>
-                    <select value={xCol} onChange={handleXColChange}>
-                        {columns.map((n) => (
-                            <option key={n} value={n}>{n}</option>
-                        ))}
-                    </select>
-                </label>
-                <label>
-                    <strong style={{ marginRight: 8 }}>Y column:</strong>
-                    <select value={yCol} onChange={handleYColChange}>
-                        {columns.map((n) => (
-                            <option key={n} value={n}>{n}</option>
-                        ))}
-                    </select>
-                </label>
-                <label>
-                    <strong style={{ marginRight: 8 }}>Dataset:</strong>
-                    <select value={datasetId} onChange={(e) => {
-                        const id = e.target.value;
-                        const meta = datasets.find(d => d.dataset_id === id);
-                        setDatasetId(id);
-                        setColumns(meta ? meta.columns : []);
-                        setTable({});
-                        setXCol('');
-                        setYCol('');
-                    }}>
-                        {datasets.map(d => (
-                            <option key={d.dataset_id} value={d.dataset_id}>{d.dataset_id}</option>
-                        ))}
-                    </select>
-                </label>
-            </div>
-            <div style={{ marginTop: 12 }}>
-                <strong>Trace Type:</strong>
-                <select
-                    value={figure.data[0]?.type || 'scattergl'}
-                    onChange={(e) => handleTraceTypeChange(0, e.target.value)}
-                    style={{ marginLeft: 8 }}
-                >
-                    <option value="scattergl">ScatterGL</option>
-                    <option value="scatter">Scatter</option>
-                    <option value="bar">Bar</option>
-                </select>
-            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                    <tr>
+                        <th style={thStyle}>Dataset</th>
+                        <th style={thStyle}>X column</th>
+                        <th style={thStyle}>Y column</th>
+                        <th style={thStyle}>Name</th>
+                        <th style={thStyle}>Color</th>
+                        <th style={thStyle}></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {traces.map((tr, i) => {
+                        const dsCols = datasetColumnsMap[tr.datasetId] || [];
+                        return (
+                            <tr key={`trace-row-${i}`}>
+                                <td style={tdStyle}>
+                                    <select value={tr.datasetId} onChange={(e) => onDatasetChange(i, e.target.value)}>
+                                        {datasets.map(d => (
+                                            <option key={d.dataset_id} value={d.dataset_id}>{d.dataset_id}</option>
+                                        ))}
+                                    </select>
+                                </td>
+                                <td style={tdStyle}>
+                                    <select value={tr.x} onChange={(e) => onXChange(i, e.target.value)}>
+                                        {dsCols.map(col => <option key={col} value={col}>{col}</option>)}
+                                    </select>
+                                </td>
+                                <td style={tdStyle}>
+                                    <select value={tr.y} onChange={(e) => onYChange(i, e.target.value)}>
+                                        {dsCols.map(col => <option key={col} value={col}>{col}</option>)}
+                                    </select>
+                                </td>
+                                <td style={tdStyle}>
+                                    <input type="text" value={tr.name} onChange={(e) => onNameChange(i, e.target.value)} />
+                                </td>
+                                <td style={tdStyle}>
+                                    <input type="color" value={tr.color} onChange={(e) => onColorChange(i, e.target.value)} />
+                                </td>
+                                <td style={{ ...tdStyle, textAlign: 'right' }}>
+                                    <button onClick={() => removeTrace(i)} title="Remove trace">X</button>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                    <tr>
+                        <td colSpan={6} style={{ padding: '8px 4px' }}>
+                            <button onClick={addTrace} title="Add trace">+ Add trace</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     );
     const renderLayoutTab = () => (
@@ -343,5 +375,8 @@ const DataFrameViewer = ({ index = 1 }) => {
         </EditorProvider>
     );
 };
+
+const thStyle = { textAlign: 'left', borderBottom: '1px solid #e5e5e5', padding: '6px 4px' };
+const tdStyle = { borderBottom: '1px solid #f3f3f3', padding: '6px 4px' };
 
 export default DataFrameViewer;
