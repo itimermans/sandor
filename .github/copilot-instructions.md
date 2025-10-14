@@ -38,6 +38,20 @@ Sandor is a Data Analysis package that provides visualization, analysis and expo
 	- UI components must render via the registry (DOM node + cleanup), not by coupling to the manager.
 	- CSS for layout must be imported once globally in `frontend/src/styles.css`.
 
+## Communication instructions
+- Goal: Use REST/JSON for small, structured control messages; use binary columnar (Arrow/Parquet) for large data. Keep both behind interfaces so we can swap transports/codecs later.
+- Do not hardcode any transport or codec in business logic. All I/O must go through adapter interfaces.
+- Prefer content negotiation:
+		- Control: Accept: application/json
+	- Data (stream): Accept: application/vnd.apache.arrow.stream
+	- Data (batch/file): Accept: application/parquet
+- Compression: Enable transparent gzip/zstd; large payloads must be streamed/chunked; avoid JSON for numeric arrays.
+- Substitution & extensibility rules:
+	- All transports implement the same interfaces (ControlTransport, DataTransport, RealtimeTransport).
+	- All codecs implement a DataCodec interface (encode/decode Arrow, Parquet; future: Flight, Arrow IPC, Zarr).
+	- No component/service may import a concrete transport/codec; use factory + DI (env-driven).
+	- Provide mock transports/codecs for tests (in-memory JSON for control; small Arrow buffers for data).
+
 ### Adding a new layout manager (e.g., Mosaic)
 1) Implement the interface from `layout/core/api.js` in a new file, e.g. `src/layout/mosaic/MosaicLayoutManager.js` with methods:
 	 - `init(hostEl)`, `registerComponent(name, render)`, `loadLayout(config)`, `addToRoot(item)`, `updateSize()`, `destroy()`.

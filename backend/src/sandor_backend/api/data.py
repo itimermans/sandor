@@ -1,10 +1,17 @@
-"""Data-related API endpoints for sandor_backend."""
+"""Data-related API endpoints for sandor_backend.
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from starlette.responses import JSONResponse
+Split planes:
+- Control: import from control.py
+- Data: binary Arrow stream or Parquet file-like
+"""
 
-from sandor_backend.services import data_service
+import os
+
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from sandor_backend.models import data_models
+from sandor_backend.models.control_models import DataSliceDescriptor
+from sandor_backend.services import data_service
+from starlette.responses import FileResponse, JSONResponse, StreamingResponse
 
 router = APIRouter()
 
@@ -22,3 +29,44 @@ async def upload_data(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(exc))
 
     return JSONResponse(content={"dataset_id": dataset_id})
+
+
+@router.post("/slice")
+async def get_slice(desc: DataSliceDescriptor):
+    """Return a data slice as Arrow stream or Parquet file, depending on codec.
+
+    Enforce a max-bytes and windowing via service layer.
+    """
+    codec = (desc.format_hint or os.environ.get("DATA_CODEC", "arrow")).lower()
+    if codec == "parquet":
+        parquet_path = await data_service.slice_to_parquet(desc)
+        return FileResponse(
+            parquet_path,
+            media_type="application/parquet",
+            filename=os.path.basename(parquet_path),
+        )
+    else:
+        chunk_iter = data_service.slice_to_arrow_stream(desc)
+        return StreamingResponse(
+            chunk_iter,
+            media_type="application/vnd.apache.arrow.stream",
+        )
+
+
+@router.get("/fetch/{handle}.arrow")
+async def fetch_arrow(handle: str):
+    chunk_iter = data_service.fetch_arrow_stream(handle)
+    return StreamingResponse(
+        chunk_iter,
+        media_type="application/vnd.apache.arrow.stream",
+    )
+
+
+@router.get("/fetch/{handle}.parquet")
+async def fetch_parquet(handle: str):
+    parquet_path = await data_service.fetch_parquet_path(handle)
+    return FileResponse(
+        parquet_path,
+        media_type="application/parquet",
+        filename=os.path.basename(parquet_path),
+    )

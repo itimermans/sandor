@@ -1,49 +1,53 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import Plot from 'react-plotly.js';
 import { EditorProvider } from './plot/editor/EditorContext.jsx';
+import { TransportClient } from '../../lib/transport/client.js';
+import { parseArrowToColumns } from '../../lib/arrow/utils.js';
 
 // Skeleton for a complex DataFrameViewer component
 const DataFrameViewer = ({ index = 1 }) => {
-    // Initial plot state and data source (placeholder):
-    // A table with 10 numeric columns by N rows of Brownian motion data.
-    const numRows = 100000; // N rows placeholder
-    const numCols = 10;
-    const colNames = useMemo(() => ['Time', ...Array.from({ length: numCols }, (_, i) => `col${i}`)], []);
-    const table = useMemo(() => {
-        // Generate independent Brownian columns
-        const cols = {};
-        // Time column from 1..N
-        cols['Time'] = Array.from({ length: numRows }, (_, i) => i + 1);
-        for (let c = 0; c < numCols; c++) {
-            const name = `col${c}`;
-            const arr = new Array(numRows);
-            let acc = 0;
-            for (let i = 0; i < numRows; i++) {
-                acc += (Math.random() - 0.5);
-                arr[i] = acc;
+    // Backend-fed dataset metadata and data
+    const [datasets, setDatasets] = useState([]);
+    const [datasetId, setDatasetId] = useState('');
+    const [columns, setColumns] = useState([]);
+    const [table, setTable] = useState({});
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const { payload } = await TransportClient.listDatasets();
+                if (!payload || !Array.isArray(payload) || payload.length === 0) return;
+                if (cancelled) return;
+                setDatasets(payload);
+                const preferred = payload.find(d => d.dataset_id === 'ONE') || payload[0];
+                setDatasetId(preferred.dataset_id);
+                setColumns(preferred.columns);
+            } catch (err) {
+                // eslint-disable-next-line no-console
+                console.error('Failed to load datasets', err);
             }
-            cols[name] = arr;
-        }
-        return cols;
-    }, [numCols, numRows]);
+        })();
+        return () => { cancelled = true };
+    }, []);
 
     // User selections for X/Y columns
-    const [xCol, setXCol] = useState('Time');
-    const [yCol, setYCol] = useState('col0');
+    const [xCol, setXCol] = useState('');
+    const [yCol, setYCol] = useState('');
 
     const [figure, setFigure] = useState(() => ({
         data: [
             {
-                x: table['Time'],
-                y: table['col0'],
+                x: table['Time'] || [],
+                y: table['A'] || [],
                 type: 'scattergl',
                 mode: 'lines',
-                name: `col0 vs Time`,
+                name: `A vs Time`,
             }
         ],
         layout: {
             autosize: true,
-            title: `Brownian Data (${numRows} rows, ${numCols} cols)`,
+            title: `Dataset`,
             showlegend: true,
         },
         config: {
@@ -54,6 +58,64 @@ const DataFrameViewer = ({ index = 1 }) => {
         },
         revision: 0
     }));
+
+    const ensureColumns = useCallback(async (neededCols) => {
+        if (!datasetId) return {};
+        const missing = neededCols.filter(c => !(c in table));
+        if (missing.length === 0) return {};
+        const desc = {
+            dataset_id: datasetId,
+            columns: Array.from(new Set(missing)),
+            row_range: [0, 200000],
+            format_hint: 'arrow',
+        };
+        const buf = await TransportClient.fetchSlice(desc);
+        const cols = parseArrowToColumns(buf);
+        setTable(prev => ({ ...prev, ...cols }));
+        return cols;
+    }, [datasetId, table]);
+
+    // Load data when dataset/columns change
+    useEffect(() => {
+        let cancelled = false;
+        if (!datasetId || columns.length === 0) return;
+        const defaultX = columns[0];
+        const defaultY = columns[1] || columns[0];
+        // Reset X/Y to dataset-specific defaults to avoid stale selections
+        setXCol(defaultX);
+        setYCol(defaultY);
+        // Clear previously cached table to prevent mixing datasets
+        setTable({});
+        (async () => {
+            try {
+                const desc = {
+                    dataset_id: datasetId,
+                    columns: Array.from(new Set([defaultX, defaultY])),
+                    row_range: [0, 200000],
+                    format_hint: 'arrow',
+                };
+                const buf = await TransportClient.fetchSlice(desc);
+                const cols = parseArrowToColumns(buf);
+                if (cancelled) return;
+                setTable(cols);
+                setFigure(f => ({
+                    ...f,
+                    data: f.data.map((t, i) => i === 0 ? {
+                        ...t,
+                        x: cols[defaultX] || [],
+                        y: cols[defaultY] || [],
+                        name: `${defaultY} vs ${defaultX}`,
+                    } : t),
+                    layout: { ...f.layout, title: `${datasetId}: ${defaultY} vs ${defaultX}` },
+                    revision: f.revision + 1,
+                }));
+            } catch (err) {
+                // eslint-disable-next-line no-console
+                console.error('Failed to fetch slice', err);
+            }
+        })();
+        return () => { cancelled = true };
+    }, [datasetId, columns]);
 
     // Event handlers for future extensibility
     const handleInitialized = useCallback((fig, graphDiv) => {
@@ -121,22 +183,26 @@ const DataFrameViewer = ({ index = 1 }) => {
         });
     };
 
-    const handleXColChange = (e) => {
+    const handleXColChange = async (e) => {
         const name = e.target.value;
         setXCol(name);
+        const fetched = await ensureColumns([name, yCol]);
+        const cols = { ...table, ...fetched };
         setFigure(f => ({
             ...f,
-            data: f.data.map((t, i) => i === 0 ? { ...t, x: table[name], name: `${yCol} vs ${name}` } : t),
+            data: f.data.map((t, i) => i === 0 ? { ...t, x: cols[name] || [], name: `${yCol} vs ${name}` } : t),
             revision: f.revision + 1,
         }));
     };
 
-    const handleYColChange = (e) => {
+    const handleYColChange = async (e) => {
         const name = e.target.value;
         setYCol(name);
+        const fetched = await ensureColumns([xCol, name]);
+        const cols = { ...table, ...fetched };
         setFigure(f => ({
             ...f,
-            data: f.data.map((t, i) => i === 0 ? { ...t, y: table[name], name: `${name} vs ${xCol}` } : t),
+            data: f.data.map((t, i) => i === 0 ? { ...t, y: cols[name] || [], name: `${name} vs ${xCol}` } : t),
             revision: f.revision + 1,
         }));
     };
@@ -148,7 +214,7 @@ const DataFrameViewer = ({ index = 1 }) => {
                 <label>
                     <strong style={{ marginRight: 8 }}>X column:</strong>
                     <select value={xCol} onChange={handleXColChange}>
-                        {colNames.map((n) => (
+                        {columns.map((n) => (
                             <option key={n} value={n}>{n}</option>
                         ))}
                     </select>
@@ -156,8 +222,24 @@ const DataFrameViewer = ({ index = 1 }) => {
                 <label>
                     <strong style={{ marginRight: 8 }}>Y column:</strong>
                     <select value={yCol} onChange={handleYColChange}>
-                        {colNames.map((n) => (
+                        {columns.map((n) => (
                             <option key={n} value={n}>{n}</option>
+                        ))}
+                    </select>
+                </label>
+                <label>
+                    <strong style={{ marginRight: 8 }}>Dataset:</strong>
+                    <select value={datasetId} onChange={(e) => {
+                        const id = e.target.value;
+                        const meta = datasets.find(d => d.dataset_id === id);
+                        setDatasetId(id);
+                        setColumns(meta ? meta.columns : []);
+                        setTable({});
+                        setXCol('');
+                        setYCol('');
+                    }}>
+                        {datasets.map(d => (
+                            <option key={d.dataset_id} value={d.dataset_id}>{d.dataset_id}</option>
                         ))}
                     </select>
                 </label>

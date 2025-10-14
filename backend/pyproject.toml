@@ -17,6 +17,7 @@ dependencies = [
     "uvicorn[standard]>=0.22",
     "python-multipart",
     "pinax @ git+https://github.com/itimermans/pinax.git",
+    "pyarrow>=15.0.0",
 
 ]
 
