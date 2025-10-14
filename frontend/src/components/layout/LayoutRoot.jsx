@@ -11,6 +11,20 @@ export default function LayoutRoot() {
     const counterRef = useRef(1)
     const [, force] = useState(0)
 
+    const addPlot = useCallback(() => {
+        const mgr = managerRef.current
+        if (!mgr) return
+        counterRef.current += 1
+        const nextIndex = counterRef.current
+        mgr.addToRoot({
+            type: 'component',
+            componentType: 'plotly-example',
+            title: `Plotly Chart #${nextIndex}`,
+            componentState: { index: nextIndex }
+        })
+        force(n => n + 1)
+    }, [])
+
     useEffect(() => {
         if (!hostRef.current) return
         if (managerRef.current) return
@@ -37,6 +51,8 @@ export default function LayoutRoot() {
         requestAnimationFrame(() => mgr.updateSize())
         setTimeout(() => mgr.updateSize(), 300)
 
+        mgr.setAddComponentHandler(addPlot)
+
         const onResize = () => mgr.updateSize()
         window.addEventListener('resize', onResize)
         managerRef.current = mgr
@@ -45,25 +61,11 @@ export default function LayoutRoot() {
             mgr.destroy()
             managerRef.current = null
         }
-    }, [])
-
-    const addPlot = useCallback(() => {
-        const mgr = managerRef.current
-        if (!mgr) return
-        counterRef.current += 1
-        const nextIndex = counterRef.current
-        mgr.addToRoot({
-            type: 'component',
-            componentType: 'plotly-example',
-            title: `Plotly Chart #${nextIndex}`,
-            componentState: { index: nextIndex }
-        })
-        force(n => n + 1)
-    }, [])
+    }, [addPlot])
 
     return (
         <div style={{ position: 'relative', height: '100%', width: '100%' }}>
-            <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 10, display: 'flex', gap: 8 }}>
+            <div style={{ position: 'absolute', top: 4, left: 8, zIndex: 10, display: 'flex', gap: 8 }}>
                 <button onClick={addPlot} style={{ padding: '6px 12px', cursor: 'pointer' }}>+ New Plot</button>
             </div>
             <div ref={hostRef} style={{ position: 'absolute', inset: 0 }} />

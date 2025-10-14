@@ -33,3 +33,27 @@ body,
 .golden-layout-wrapper {
     background: white;
 }
+
+.gl-add-tab-btn {
+    margin-left: 6px;
+    border: 1px solid transparent;
+    background: #f5f5f7;
+    color: #555;
+    border-radius: 4px;
+    width: 22px;
+    height: 22px;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.gl-add-tab-btn:hover {
+    background: #e4e4ea;
+    border-color: #c0c0c8;
+    color: #222;
+}
