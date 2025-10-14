@@ -137,9 +137,43 @@ const DataFrameViewer = ({ index = 1 }) => {
     // Event handlers for future extensibility
     const handleInitialized = useCallback((fig, graphDiv) => {
         setFigure(f => ({ ...f, ...fig }));
+        // Sync any user-edited trace names from the rendered figure into our traces state
+        if (fig && Array.isArray(fig.data)) {
+            setTraces(ts => {
+                if (!ts || ts.length === 0) return ts;
+                const next = ts.map((t, i) => {
+                    const name = fig.data[i]?.name;
+                    return name !== undefined && name !== t.name ? { ...t, name } : t;
+                });
+                // Only update if changed
+                for (let i = 0; i < next.length; i++) {
+                    if (next[i].name !== ts[i].name) return next;
+                }
+                return ts;
+            });
+        }
     }, []);
     const handleUpdate = useCallback((fig, graphDiv) => {
         setFigure(f => ({ ...f, ...fig }));
+        // When plotly notifies of an update (e.g., legend edit), propagate changed trace names
+        if (fig && Array.isArray(fig.data)) {
+            setTraces(ts => {
+                if (!ts || ts.length === 0) return ts;
+                const next = ts.map((t, i) => {
+                    const name = fig.data[i]?.name;
+                    return name !== undefined && name !== t.name ? { ...t, name } : t;
+                });
+                // Only update state when there's an actual change to avoid loops
+                let changed = false;
+                if (next.length !== ts.length) changed = true;
+                else {
+                    for (let i = 0; i < next.length; i++) {
+                        if (next[i].name !== ts[i].name) { changed = true; break; }
+                    }
+                }
+                return changed ? next : ts;
+            });
+        }
     }, []);
     const handlePurge = useCallback((fig, graphDiv) => {
         // Cleanup logic if needed
