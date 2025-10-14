@@ -1,5 +1,5 @@
 import React from 'react'
-import GoldenLayoutRoot from './components/GoldenLayoutRoot'
+import LayoutRoot from './components/layout/LayoutRoot'
 
 // App.jsx: top-level React component.
 // - Keeps communication with backend minimal for now.
@@ -13,7 +13,7 @@ export default function App() {
             </header>
             <main className="app-main">
                 <div style={{ height: '70vh', minHeight: 400 }}>
-                    <GoldenLayoutRoot />
+                    <LayoutRoot />
                 </div>
             </main>
         </div>

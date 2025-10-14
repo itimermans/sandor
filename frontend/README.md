@@ -57,3 +57,21 @@ If you'd like, next I can:
 - Wire a simple health check call to display backend status in the header.
 - Add a file upload UI that calls the backend `/data/upload` endpoint.
 - Add hotkeys or presets for Golden Layout layouts.
+
+## Layout/window-manager abstraction
+
+The app intentionally abstracts layout/window management so we can swap Golden Layout with another library later.
+
+- Core API: `src/layout/core/api.js` documents the `LayoutManager` interface and config shapes.
+- Current implementation: `src/layout/golden/GoldenLayoutManager.js` encapsulates Golden Layout specifics.
+- App entry for layout: `src/components/layout/LayoutRoot.jsx` uses the manager and loads the initial layout.
+- Component registry: `src/components/layout/componentRegistry.jsx` maps `componentType` to a render function that mounts into a provided DOM node and returns a cleanup.
+- Styles: `src/styles.css` imports layout CSS globally.
+
+To add a new layout manager:
+1) Create `src/layout/<name>/<Name>LayoutManager.js` implementing the methods from `api.js`:
+  - `init(hostEl)`, `registerComponent(name, render)`, `loadLayout(config)`, `addToRoot(item)`, `updateSize()`, `destroy()`.
+2) Use the same config shape (root container with `content` items; components have `componentType` and optional `title`/`componentState`).
+3) Update `LayoutRoot.jsx` to instantiate your new manager instead of the Golden one (one import change).
+4) Ensure required CSS is added to `src/styles.css`.
+5) Run the dev server and confirm the initial Plotly example renders and new panes can be added.
