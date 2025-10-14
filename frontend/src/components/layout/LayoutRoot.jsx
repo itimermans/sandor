@@ -18,8 +18,8 @@ export default function LayoutRoot() {
         const nextIndex = counterRef.current
         mgr.addToRoot({
             type: 'component',
-            componentType: 'plotly-example',
-            title: `Plotly Chart #${nextIndex}`,
+            componentType: 'dataframe-viewer',
+            title: `DataFrame Viewer #${nextIndex}`,
             componentState: { index: nextIndex }
         })
         force(n => n + 1)
@@ -43,7 +43,7 @@ export default function LayoutRoot() {
             root: {
                 type: 'row',
                 content: [
-                    { type: 'component', componentType: 'plotly-example', title: 'Plotly Chart #1', componentState: { index: 1 } }
+                    { type: 'component', componentType: 'dataframe-viewer', title: 'DataFrame Viewer', componentState: { index: 1 } }
                 ]
             }
         })
