@@ -1,0 +1,145 @@
+// ============================================================================
+// .vscode/settings.json -- workspace settings, committed to the repository.
+//
+// These apply to anyone who opens this folder in VS Code, on any OS, and they
+// override the user's personal settings for this workspace only. Keep this file
+// limited to things that are genuinely PROJECT policy. Personal preferences
+// (theme, font size, keybindings) belong in the user settings, not here.
+//
+// As with tasks.json, VS Code reads this as JSONC, so comments are legal.
+// ============================================================================
+{
+  // ------------------------------------------------------------------------
+  // LINE ENDINGS -- the most important setting in this file.
+  //
+  // Force LF on save, on every platform including Windows. This is the editor
+  // half of DESIGN.md D18 convention 1; `.gitattributes` is the Git half.
+  //
+  // Why it matters more here than in a typical project: DESIGN.md D3 makes a
+  // hash of a cell's source code the mechanism for detecting hand edits. A
+  // notebook saved with CRLF on Windows and reopened on macOS would hash
+  // differently for byte-identical content, and EVERY Sandor cell would falsely
+  // report itself hand-edited. The hash function will normalise line endings
+  // itself (that is the real defence, scheduled for M5) -- but keeping CRLF out
+  // of the tree in the first place removes an entire class of confusion.
+  //
+  // Note this machine has `core.autocrlf=true` set globally in Git, which is
+  // exactly the setting that would otherwise reintroduce CRLF.
+  // ------------------------------------------------------------------------
+  "files.eol": "\n",
+
+  // Strip trailing whitespace and guarantee a final newline. Cosmetic on their
+  // own, but they eliminate the diff noise that appears when contributors have
+  // different editor defaults.
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  // ------------------------------------------------------------------------
+  // PYTHON ENVIRONMENT
+  //
+  // We do NOT pin `python.defaultInterpreterPath`, because the interpreter
+  // lives at `.venv/Scripts/python.exe` on Windows and `.venv/bin/python`
+  // elsewhere -- a single hard-coded value would be wrong on one of them, and
+  // committing a broken path is worse than committing none. The Python
+  // extension auto-discovers a `.venv` in the workspace root anyway. If it ever
+  // picks the wrong one: Ctrl+Shift+P -> "Python: Select Interpreter" -> .venv
+  // ------------------------------------------------------------------------
+
+  // Do not auto-activate the environment in terminals.
+  //
+  // Sandor's convention is `uv run <command>` for everything, with no
+  // activation step (DESIGN.md D17). Auto-activation adds nothing and actively
+  // causes trouble: it is what stacks a conda `(base)` prompt on top of the
+  // venv and produces terminals whose PATH does not match what `uv run` uses.
+  "python.terminal.activateEnvInCurrentTerminal": false,
+  "python.terminal.activateEnvironment": false,
+
+  // Testing: point the VS Code Test Explorer at pytest so tests are runnable
+  // from the gutter. `.` is the repo root, where conftest.py lives.
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": ["."],
+
+  // ------------------------------------------------------------------------
+  // TYPESCRIPT
+  // ------------------------------------------------------------------------
+
+  // Use the TypeScript compiler pinned in package.json (currently ~5.5.4)
+  // rather than the version bundled inside VS Code. Without this, the editor
+  // can report errors the build does not, or miss errors the build catches --
+  // and the two versions drift apart silently.
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  // Prefer relative import paths (`./request`) over paths rooted at the package
+  // name. Matches how src/index.ts is written.
+  "typescript.preferences.importModuleSpecifier": "relative",
+
+  // ------------------------------------------------------------------------
+  // NOISE REDUCTION
+  //
+  // These directories are build output or third-party code. Hiding them from
+  // search and from the file watcher makes Ctrl+P and global search usable, and
+  // stops the watcher exhausting OS file-handle limits on large trees.
+  //
+  // They are hidden from SEARCH but left visible in the Explorer -- being able
+  // to see that `sandor/labextension/` exists is genuinely useful when
+  // diagnosing a build problem.
+  // ------------------------------------------------------------------------
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.venv": true,
+    "**/lib": true,
+    "**/coverage": true,
+    "**/sandor/labextension": true,
+    "**/.yarn": true,
+    "**/*.tsbuildinfo": true,
+    "**/uv.lock": true,
+    "**/yarn.lock": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.venv/**": true,
+    "**/lib/**": true,
+    "**/sandor/labextension/**": true,
+    "**/.yarn/**": true
+  },
+
+  // ------------------------------------------------------------------------
+  // FORMATTING
+  //
+  // Prettier owns formatting for the web-side files; ESLint owns correctness.
+  // See the comment at the top of eslint.config.mjs for why that split matters.
+  //
+  // These settings require the `esbenp.prettier-vscode` extension, which is in
+  // .vscode/extensions.json as a recommendation. Without it installed, VS Code
+  // just does not format on save -- nothing breaks.
+  // ------------------------------------------------------------------------
+  "editor.formatOnSave": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    // Markdown formatting is off: Prettier reflows tables and lists in ways
+    // that create large, unreviewable diffs in docs/DESIGN.md.
+    "editor.formatOnSave": false
+  },
+
+  // Treat these as JSON-with-comments so the editor does not underline every
+  // comment in them as an error.
+  "files.associations": {
+    "*.json5": "jsonc",
+    ".copier-answers.yml": "yaml"
+  }
+}

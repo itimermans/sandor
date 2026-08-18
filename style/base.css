@@ -1,0 +1,52 @@
+/*
+    style/base.css -- all of Sandor's actual CSS rules.
+
+    See the JupyterLab Developer Guide for useful CSS Patterns:
+
+    https://jupyterlab.readthedocs.io/en/stable/developer/css.html
+
+    ------------------------------------------------------------------------
+    HOW THE THREE FILES IN style/ FIT TOGETHER
+    ------------------------------------------------------------------------
+    base.css   -- this file. The real rules. Everything Sandor styles goes here.
+    index.css  -- `@import url('base.css');`  The entry point for consumers who
+                  load CSS directly. Referenced by `"style"` in package.json.
+    index.js   -- `import './base.css';`      The entry point for the webpack
+                  build, which pulls CSS in through JavaScript rather than a
+                  stylesheet link. Referenced by `"styleModule"` in package.json.
+
+    Two entry points for one stylesheet looks redundant but is not: JupyterLab
+    supports both a plain-CSS consumption path and a bundler path, and the
+    template wires up both so the extension works either way. Add rules to
+    base.css only; leave the other two alone.
+
+    ------------------------------------------------------------------------
+    TWO RULES FOR WRITING CSS HERE
+    ------------------------------------------------------------------------
+    1. USE JUPYTERLAB'S CSS VARIABLES, never hard-coded colours or sizes:
+
+           background-color: var(--jp-layout-color1);
+           color:            var(--jp-ui-font-color1);
+           border:           1px solid var(--jp-border-color2);
+           font-family:      var(--jp-ui-font-family);
+
+       These are redefined by the active theme. A hard-coded `#ffffff` looks
+       fine in the light theme and becomes unreadable in the dark one. The full
+       list is in JupyterLab's `packages/apputils/style/base.css`.
+
+    2. NAMESPACE EVERY CLASS. All CSS on the page shares one global namespace --
+       there is no scoping, no modules, no `static` equivalent. A bare
+       `.container` rule here would restyle parts of JupyterLab itself. Prefix
+       everything:
+
+           .sandor-PlotCell { ... }
+           .sandor-PlotCell-toolbar { ... }
+
+       The convention JupyterLab follows is `<prefix>-<ComponentName>-<part>`,
+       with the component in PascalCase. `.stylelintrc` in package.json enforces
+       a matching pattern, so a badly named class fails `uv run jlpm lint`.
+
+    ------------------------------------------------------------------------
+    No rules yet -- Sandor has no UI. First ones arrive with M1/M3.
+    ------------------------------------------------------------------------
+*/

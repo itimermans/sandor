@@ -1,0 +1,19 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v4.6.4
+_src_path: https://github.com/jupyterlab/extension-template
+advanced: false
+author_email: itimermans@anl.gov
+author_name: Inigo Timermans
+create_claude_symlink: false
+create_gemini_symlink: false
+has_ai_rules: true
+has_binder: false
+has_settings: true
+kind: frontend-and-server
+labextension_name: sandor
+project_short_description: A supercharged JupyterLab environment for vehicle test
+    data analysis
+python_name: sandor
+repository: https://github.com/itimermans/sandor
+test: true
+

@@ -1,0 +1,113 @@
+// ============================================================================
+// tsconfig.json -- how TypeScript compiles src/ into lib/.
+//
+// Yes, comments are legal here. tsconfig.json is JSONC ("JSON with comments"),
+// parsed by TypeScript's own reader rather than a strict JSON parser. Do NOT
+// copy this trick into package.json or schema/plugin.json -- those are read by
+// strict parsers and a comment breaks them.
+//
+// WHERE THIS SITS IN THE BUILD
+// ----------------------------
+//   src/*.ts  --[ tsc, this config ]-->  lib/*.js  --[ webpack ]-->  sandor/labextension/
+//
+// Two distinct steps. `tsc` only does the first: type-check and emit plain
+// JavaScript. Bundling, module federation, and the final labextension layout
+// are webpack's job, driven by `jupyter-builder` (see package.json scripts).
+// `jlpm watch` runs both in parallel, which is why one save triggers two
+// rebuilds in the terminal.
+// ============================================================================
+{
+  "compilerOptions": {
+    // Allow `import x from 'y'` even when 'y' has no default export. Needed
+    // because much of the npm ecosystem predates ES modules.
+    "allowSyntheticDefaultImports": true,
+
+    // Enable TypeScript "project references" -- lets other tsconfigs depend on
+    // this one and reuse its build output. Required by `tsconfig.test.json`.
+    "composite": true,
+
+    // Emit `.d.ts` type declaration files alongside the `.js`. These are what
+    // let another TypeScript project consume Sandor with full type information.
+    // The closest analogue to a C++ header, except generated, not written.
+    "declaration": true,
+
+    // Smooth over the CommonJS/ES-module divide when importing. Companion to
+    // allowSyntheticDefaultImports.
+    "esModuleInterop": true,
+
+    // Cache build state in tsconfig.tsbuildinfo so a rebuild only recompiles
+    // what changed. This is what makes `jlpm watch` fast.
+    "incremental": true,
+
+    // Compile JSX to React.createElement calls. Sandor uses no React yet, but
+    // JupyterLab's own UI toolkit is React-based, so keep it available.
+    "jsx": "react",
+
+    // Which built-in type definitions are in scope. "DOM" brings `document`,
+    // `window`, `fetch` -- omit it and browser APIs become compile errors.
+    "lib": ["DOM", "ES2018", "ES2020.Intl"],
+
+    // Emit ES-module syntax (`import`/`export`) and let webpack handle it,
+    // rather than downlevelling to CommonJS. Required for tree-shaking and for
+    // JupyterLab's module federation to work.
+    "module": "esnext",
+
+    // Resolve imports the way Node does: walk up looking in node_modules.
+    "moduleResolution": "node",
+
+    // Do not write output files if there are type errors. Without this, `tsc`
+    // emits JavaScript anyway and a type error becomes a confusing runtime bug
+    // in the browser instead of a build failure in the terminal.
+    "noEmitOnError": true,
+
+    // Reject implicitly-`any` values. Forces you to say what you mean, or say
+    // `any` deliberately.
+    "noImplicitAny": true,
+
+    // Unused local variables are compile errors. Occasionally irritating
+    // mid-edit; keeps dead code out of the tree.
+    "noUnusedLocals": true,
+
+    // Do not clear the terminal on each watch rebuild -- keeps earlier errors
+    // visible while iterating.
+    "preserveWatchOutput": true,
+
+    // Allow `import config from './thing.json'` with the JSON's shape inferred
+    // as a type. Likely useful when the plot-config schema (D12) lands.
+    "resolveJsonModule": true,
+
+    // Where compiled JavaScript goes. `lib/` is gitignored -- it is build
+    // output. `package.json`'s `"main": "lib/index.js"` points here.
+    "outDir": "lib",
+
+    // Where the sources are. Fixes how paths under outDir are laid out:
+    // src/index.ts -> lib/index.js, not lib/src/index.js.
+    "rootDir": "src",
+
+    // Turn on every strictness flag at once -- the single most valuable setting
+    // in this file. Among other things it enables strictNullChecks below.
+    "strict": true,
+
+    // Listed explicitly for emphasis even though `strict` already implies it.
+    // This is what makes `ISettingRegistry | null` in src/index.ts a compile
+    // error unless you check for null. It is TypeScript's answer to the null
+    // dereference, and it is why the type system earns its keep.
+    "strictNullChecks": true,
+
+    // Emit JavaScript at the ES2018 language level. Modern enough for clean
+    // async/await, old enough for every browser JupyterLab supports.
+    "target": "ES2018",
+
+    // Which @types packages to load globally. Only "jest", so that `describe`
+    // and `it` are recognised in .spec.ts files without an import.
+    "types": ["jest"]
+  },
+
+  // What to compile. Everything else -- ui-tests/, the config files at the repo
+  // root, the Python tree -- is outside the TypeScript project entirely.
+  //
+  // Worth knowing: ESLint is pointed at this same file (see eslint.config.mjs
+  // `parserOptions.project`). A .ts file not covered by this `include` will make
+  // ESLint fail with "file is not included in your project" rather than lint it.
+  "include": ["src/*"]
+}

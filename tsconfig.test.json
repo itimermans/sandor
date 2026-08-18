@@ -1,0 +1,17 @@
+// ============================================================================
+// tsconfig.test.json -- TypeScript settings for the Jest test run.
+//
+// Separate from tsconfig.json because tests legitimately need looser settings
+// than shipped code: they import from `src/`, they use Jest globals, and they
+// are not part of the published bundle.
+//
+// Right now it inherits everything and overrides nothing. Kept as a distinct
+// file so that when tests do need a divergent setting, there is an obvious
+// place for it that cannot leak into the production build.
+//
+// `"extends": "./tsconfig"` -- the `.json` extension is optional in an extends
+// path. It resolves to ./tsconfig.json.
+// ============================================================================
+{
+  "extends": "./tsconfig"
+}

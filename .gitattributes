@@ -1,0 +1,48 @@
+# Line-ending policy — see docs/DESIGN.md D18 and the correctness callout in D3.
+#
+# Why this file matters more than usual for Sandor:
+#   Sandor stores a hash of a cell's source code in notebook metadata, and compares
+#   it on open to detect hand-edited cells (DESIGN.md D3, Rule 2). If the same file
+#   is CRLF on one machine and LF on another, the hashes differ and EVERY Sandor cell
+#   falsely reports "hand-edited". Normalising the repo to LF is the first of two
+#   required defences; the second is normalising inside the hash function itself,
+#   because .ipynb is JSON whose `source` strings carry their own embedded newlines
+#   that Git's checkout conversion never touches.
+#
+# This overrides a global core.autocrlf=true, which is set on at least one dev machine.
+
+# Default: treat as text, store LF in the repo, check out LF in the working tree.
+* text=auto eol=lf
+
+# Explicit for the formats we care about most.
+*.py    text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.ipynb text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.css   text eol=lf
+*.toml  text eol=lf
+*.cfg   text eol=lf
+
+# Binary / data formats — never touch these.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.woff  binary
+*.woff2 binary
+*.tdms  binary
+*.mf4   binary
+*.mdf   binary
+*.dat   binary
+*.parquet binary
+
+# Lockfiles: keep them out of diffs and language stats.
+uv.lock    linguist-generated=true
+yarn.lock  linguist-generated=true

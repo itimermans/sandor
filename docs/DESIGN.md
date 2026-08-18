@@ -3,6 +3,8 @@
 > **Status:** Planning phase. No code written yet.
 > **Last updated:** 2026-08-18
 > **Document owner:** Inigo Timermans
+> **Companion document:** [`WORKFLOW.md`](WORKFLOW.md) — how to set up and develop. Read this one
+> first for *what and why*; read that one for *how*.
 
 ---
 
@@ -265,6 +267,13 @@ one clear failure mode, not a Python interpreter.
   (*"this cell was edited by hand — [re-adopt into UI] / [keep as plain code]"*) and **leave the
   user's code completely untouched**.
 
+> **The hash function MUST normalise line endings before hashing** (and should normalise trailing
+> whitespace). Without this, a notebook written on Windows (CRLF) and opened on macOS (LF) produces a
+> different hash for identical content, and **every Sandor cell falsely reports "hand-edited"**.
+> A `.gitattributes` LF policy is necessary but *not sufficient*, because the notebook is JSON whose
+> `source` strings carry their own embedded newlines independent of Git's checkout conversion.
+> Both defences are required. See D18 and `WORKFLOW.md` §8.
+
 This yields A and B simultaneously from one mechanism: code is truth, metadata is a fast path, and
 the hash is the honesty check. It also lets the UI populate at page load with no kernel running —
 something pure Option B cannot otherwise do.
@@ -485,6 +494,106 @@ Therefore, as a hard rule and not a preference:
 - Professional structure throughout: proper folder layout, dependency isolation, lockfiles, linting,
   formatting, tests, CI-ready.
 - Design every component as modular and ready for future upgrades.
+
+### D17 — Toolchain: uv + Node 24 LTS + Python 3.12 `DECIDED`
+
+**Python environments and dependencies: `uv`.** Not conda, not bare `venv`, not `pip` directly.
+
+Three facts drove this:
+
+1. **Sandor ships to PyPI.** Users will `pip install sandor`; packaging is pip-native (`hatchling` +
+   `hatch-jupyter-builder`). Developing in a pip-native environment keeps development honest —
+   conda can satisfy dependencies in ways pip cannot see, so "works in my conda env" can silently
+   diverge from what users actually receive.
+2. **Node is build-time only.** End users never need it; the wheel ships pre-compiled JavaScript.
+   This removes conda's historical advantage of managing non-Python tooling, and the other half of
+   that advantage (compiled scientific dependencies) has largely evaporated now that numpy, pandas,
+   pyarrow, and polars all ship wheels for every target platform.
+3. **Multiple machines and multiple agents** make reproducibility a hard requirement.
+
+Why `uv` over plain `venv` + `pip`:
+
+- **`uv.lock`** — a real cross-platform lockfile, committed. The decisive feature for fact 3.
+- It manages Python interpreters itself (`uv python install 3.12`) — no pyenv, no system-Python
+  roulette.
+- **`uv run <cmd>`** executes inside the environment with no activation step. Beyond convenience,
+  this matters for AI agents: there is no activation state for a separate shell invocation to lose.
+  Evidence from the planning session — `conda run` failed outright on a multi-line command, a
+  friction that compounds across many agent tool calls. **There is no `activate` step in this
+  project; do not add one.**
+- Roughly 10–100× faster than pip.
+
+*Considered and not chosen:* **pixi** — the modern conda-ecosystem answer, which would manage Python
+*and* Node from one manifest. Genuinely attractive, but inherits the PyPI-fidelity problem in fact 1.
+
+**Node: 24 LTS**, recorded in `.node-version`, installed via **fnm** so it does not disturb any
+system-wide Node. JupyterLab's build chain (webpack 5 plus a bundled Yarn exposed as `jlpm`) is
+tested against LTS releases; newer "Current" releases periodically break it. `nvm` is rejected — it
+does not run on Windows. No separate Yarn or npm version management is needed, because `jlpm` is
+pinned by JupyterLab.
+
+**Python: 3.12.** JupyterLab supports 3.10–3.14. 3.12 has the longest tail of wheel availability for
+anything niche we may later add from the vehicle-data ecosystem.
+
+### D18 — Cross-platform from day one: Windows, macOS, Linux `DECIDED`
+
+Cheap to establish now, moderately expensive to retrofit. Every layer in the stack (uv, Node,
+TypeScript, JupyterLab) is equally cross-platform, and every data library in scope (npTDMS,
+`asammdf`) is pure Python. macOS is in fact the *easier* target — `jupyter labextension develop`
+uses symlinks, which are free there and require Developer Mode on Windows.
+
+**The shipped artifact is portable by construction.** The frontend is compiled JavaScript running in
+a browser — browsers are the portability layer, so there is zero platform surface. Our Python has no
+C extensions. Consequently the wheel is **pure-Python (`py3-none-any`)**: one single artifact for
+Windows, macOS (Intel and Apple Silicon), and Linux, with nothing compiled on the user's machine.
+This follows directly from D17's "Node is build-time only" — the JavaScript ships as pre-compiled
+*text*, and text is platform-neutral.
+
+Platform bugs never come from the language or runtime. They come from: path separators and drive
+letters; line endings; text encoding; case sensitivity; file locking (Windows locks open files,
+POSIX does not — relevant to the deferred cache layer); the Windows 260-character path limit
+(development only, via deep `node_modules`); and symlinks (development only).
+
+Six binding conventions:
+
+1. **Line endings.** `.gitattributes` with `* text=auto eol=lf`, **and** normalisation inside the
+   hash function. This is a correctness requirement, not style — see the callout in D3.
+2. **Paths in code.** `pathlib.Path` in Python; never string concatenation or hardcoded separators.
+3. **Paths in generated configs — the Sandor-specific one, and the most important.**
+   Configs store **relative, POSIX-style** paths (`data/vehicle_A/test_042.tdms`), resolved against a
+   project root at load time. Absolute paths are accepted but flagged.
+
+   > A data-source cell emitting `sandor.load("C:\\data\\test.tdms")` produces a notebook that is
+   > silently Windows-only. Since this project's entire premise is that the notebook *is* a portable
+   > configuration file (§1.3), that is a defect in the deliverable, not a cosmetic issue — and it
+   > fails on a colleague's machine rather than the author's. Forward slashes work correctly on
+   > Windows in Python, so POSIX-style is the right canonical form on all three platforms.
+
+4. **Encoding.** Always pass `encoding="utf-8"` explicitly. Never rely on the platform default.
+5. **Case sensitivity.** Windows and macOS are case-insensitive by default, Linux is not. Enforce
+   via linting.
+6. **No shell scripts.** No `.sh`, no `.bat`. Scripted work goes in Python or as cross-platform npm
+   scripts.
+
+**Enforcement**, in increasing order of strength — only the last is a guarantee:
+
+- Conventions (above) prevent most of it, for free.
+- **Linting** — ruff flags `open()` without an encoding and several path antipatterns.
+- **Targeted tests** for the two known failure modes: a config round-trip containing both
+  Windows-style and POSIX-style paths, and hash stability across both line-ending conventions.
+- **CI matrix** — `windows-latest` / `macos-latest` / `ubuntu-latest`. The only real guarantee, since
+  nearly all development happens on one machine.
+
+**CI must test the built artifact, not the source tree.** Build the wheel, install it fresh, and run
+the Galata UI tests against *that* install. JupyterLab extensions have a well-known failure mode
+where compiled JS assets are present in the working tree but omitted from the wheel: everything
+passes locally, and users install an extension that silently does nothing. Only testing the artifact
+catches it.
+
+*Note:* developing primarily on Windows is a mild advantage — Windows is stricter about paths,
+reserved filenames, and file locking, so Windows-passing code generally runs on POSIX. The exception
+runs the other way (case sensitivity, where Linux is strictest), which is precisely what the matrix
+covers.
 
 ---
 
@@ -768,7 +877,8 @@ Do not re-propose these without new information.
 | 1 | How to resolve the "file changed on disk" conflict for AI editing (§9.3) — contents API, closed-file editing, or RTC? | Live agent editing |
 | 2 | Exact JSON Schema for the plot config (D12) — the concrete field set. | The first vertical slice |
 | 3 | Whether RTC (D11) is eventually enabled. Tied to #1. | Conflict policy design |
-| 4 | Precise scope of the first vertical slice. | Start of implementation |
+| 4 | Precise scope of the first vertical slice. | Start of implementation — see [`ROADMAP.md`](ROADMAP.md) |
+| ~~5~~ | ~~Does `hatch-jupyter-builder` work under uv's build isolation?~~ **RESOLVED 2026-08-18: yes, with default build isolation, no workaround needed.** | — |
 
 ---
 
@@ -831,3 +941,5 @@ on the fetched page (§11.2).
 | Date | Change |
 | --- | --- |
 | 2026-08-18 | Document created from the initial planning conversation. Decisions D1–D16 recorded. |
+| 2026-08-18 | Added **D17** (toolchain: uv + Node 24 LTS + Python 3.12) and **D18** (cross-platform conventions). Added a correctness callout to **D3**: the source hash must normalise line endings, or notebooks moved between Windows and macOS falsely report every cell as hand-edited. Added `WORKFLOW.md` and `ROADMAP.md` as companion documents. Open question 5 added. |
+| 2026-08-18 | Expanded **D18**: the shipped wheel is pure-Python `py3-none-any` and portable by construction; added convention 3 (**relative POSIX-style paths in generated configs** — otherwise notebooks are silently Windows-only, a defect in the deliverable itself) and convention 4 (explicit UTF-8); added the enforcement ladder and the requirement that **CI test the built wheel, not the source tree**. |

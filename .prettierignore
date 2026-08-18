@@ -1,0 +1,23 @@
+# Files Prettier must not reformat.
+#
+# Prettier owns formatting for the web-side source (see eslint.config.mjs for
+# the ESLint/Prettier split). Everything listed here is either generated, not
+# ours, or hand-formatted for a reason.
+
+# --- Third-party and generated ---------------------------------------------
+node_modules
+**/node_modules
+**/lib                 # tsc output
+**/package.json        # ...except the root one, un-ignored on the next line
+!/package.json
+sandor                 # the Python package, incl. the built labextension/
+.venv                  # the uv-managed virtualenv (DESIGN.md D17)
+
+# --- Deliberately excluded --------------------------------------------------
+eslint.config.mjs      # heavily commented; Prettier collapses the comments
+
+# Markdown documentation. Prettier reflows tables and wrapped list items, which
+# turns a one-word edit in docs/DESIGN.md into a hundred-line diff and makes
+# review impossible. These files are hand-formatted to a 100-column margin.
+# .vscode/settings.json disables format-on-save for markdown to match.
+*.md

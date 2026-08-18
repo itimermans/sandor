@@ -1,0 +1,11 @@
+/*
+    style/index.css -- plain-CSS entry point.
+
+    Named by `"style": "style/index.css"` in package.json, for consumers that
+    load the stylesheet directly rather than through a bundler.
+
+    Kept as a one-line re-export on purpose. Real rules go in base.css so that
+    both entry points (this file and index.js) serve identical content. See the
+    long comment at the top of base.css.
+*/
+@import url('base.css');

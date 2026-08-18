@@ -1,0 +1,41 @@
+// ============================================================================
+// .vscode/extensions.json -- suggested VS Code extensions for this project.
+//
+// VS Code shows a one-time "this workspace recommends extensions" prompt when
+// the folder is first opened. Nothing here is installed automatically and
+// nothing breaks if a recommendation is declined -- these only make the
+// settings in .vscode/settings.json take effect.
+//
+// The list is deliberately short. A long recommendation list is ignored.
+// ============================================================================
+{
+  "recommendations": [
+    // --- Python -----------------------------------------------------------
+    // Interpreter selection, the Test Explorer integration that
+    // `python.testing.pytestEnabled` relies on, and debugging.
+    "ms-python.python",
+    // Pylance: the fast language server -- completion, type checking,
+    // go-to-definition for the Python half.
+    "ms-python.vscode-pylance",
+
+    // --- Web side ---------------------------------------------------------
+    // Prettier. Required by the `editor.defaultFormatter` entries in
+    // settings.json; without it, format-on-save silently does nothing for
+    // .ts/.css/.json.
+    "esbenp.prettier-vscode",
+    // ESLint. Surfaces the rules in eslint.config.mjs inline as you type,
+    // rather than only when `uv run jlpm lint` is run.
+    "dbaeumer.vscode-eslint",
+
+    // --- Notebooks --------------------------------------------------------
+    // Lets .ipynb files be opened natively in VS Code. Useful for INSPECTING
+    // notebook JSON and metadata while developing Sandor's cell contract
+    // (DESIGN.md §5).
+    //
+    // Caveat worth knowing: VS Code's notebook editor is NOT JupyterLab. It
+    // will not render Sandor's custom cell UI, and it may normalise or drop
+    // metadata it does not recognise. Always verify actual Sandor behaviour in
+    // a real `uv run jupyter lab`, never in this editor.
+    "ms-toolsai.jupyter"
+  ]
+}

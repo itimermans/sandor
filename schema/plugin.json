@@ -1,0 +1,8 @@
+{
+  "jupyter.lab.shortcuts": [],
+  "title": "sandor",
+  "description": "sandor settings.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

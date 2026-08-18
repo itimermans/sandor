@@ -1,6 +1,35 @@
+*.bundle.*
+lib/
+node_modules/
+*.log
+.eslintcache
+.stylelintcache
+*.egg-info/
+.ipynb_checkpoints
+*.tsbuildinfo
+sandor/labextension
+# Version file is handled by hatchling
+sandor/_version.py
+
+# Integration tests
+ui-tests/test-results/
+ui-tests/playwright-report/
+
+# Test reports. `junit.xml` is emitted by pytest when CI passes --junitxml;
+# it also appears locally if that flag ends up in a config. Always an artefact.
+junit.xml
+coverage/
+
+# Created by https://www.gitignore.io/api/python
+# Edit at https://www.gitignore.io/?templates=python
+
+### Python ###
+# Virtual environments
+.venv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[codz]
+*.py[cod]
 *$py.class
 
 # C extensions
@@ -20,8 +49,8 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
 share/python-wheels/
-*.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
@@ -44,19 +73,89 @@ htmlcov/
 .coverage.*
 .cache
 nosetests.xml
+coverage/
 coverage.xml
 *.cover
-*.py.cover
 .hypothesis/
 .pytest_cache/
-cover/
 
 # Translations
 *.mo
 *.pot
 
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# End of https://www.gitignore.io/api/python
+
+# OSX files
+.DS_Store
+
+# Yarn cache
+.yarn/
+
+# ----------------------------------------------------------------------
+# Python / general rules carried over from the pre-scaffold .gitignore
+# ----------------------------------------------------------------------
+
+# Byte-compiled / optimized / DLL files
+*.py[codz]
+
+# C extensions
+
+# Distribution / packaging
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+
+# Installer logs
+
+# Unit test / coverage reports
+*.py.cover
+cover/
+
+# Translations
+
 # Django stuff:
-*.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -66,17 +165,13 @@ instance/
 .webassets-cache
 
 # Scrapy stuff:
-.scrapy
 
 # Sphinx documentation
-docs/_build/
 
 # PyBuilder
 .pybuilder/
-target/
 
 # Jupyter Notebook
-.ipynb_checkpoints
 
 # IPython
 profile_default/
@@ -128,16 +223,13 @@ ipython_config.py
 __pypackages__/
 
 # Celery stuff
-celerybeat-schedule
 celerybeat.pid
 
 # SageMath parsed files
-*.sage.py
 
 # Environments
 .env
 .envrc
-.venv
 env/
 venv/
 ENV/
@@ -145,22 +237,14 @@ env.bak/
 venv.bak/
 
 # Spyder project settings
-.spyderproject
-.spyproject
 
 # Rope project settings
-.ropeproject
 
 # mkdocs documentation
-/site
 
 # mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
 
 # Pyre type checker
-.pyre/
 
 # pytype static type analyzer
 .pytype/

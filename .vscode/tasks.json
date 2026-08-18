@@ -1,0 +1,172 @@
+// ============================================================================
+// .vscode/tasks.json -- one-command start and stop for the Sandor dev loop.
+//
+// HOW TO USE
+// ----------
+//   Start everything:  Ctrl+Shift+B
+//                      (or Ctrl+Shift+P -> "Tasks: Run Build Task")
+//   Stop everything:   Ctrl+Shift+P -> "Tasks: Run Task" -> "Sandor: stop"
+//
+// Starting opens two terminals side by side in one panel group:
+//   * "watch"  -- rebuilds the TypeScript on every save
+//   * "lab"    -- the JupyterLab server
+//
+// That reproduces WORKFLOW.md §4 exactly; the tasks exist so you do not have to
+// remember two commands and two terminals.
+//
+// AFTER STARTING, THE RESTART MATRIX STILL APPLIES (WORKFLOW.md §5):
+//   changed src/*.ts or style/*.css  ->  wait for watch, then F5 in the browser
+//   changed sandor/*.py (server)     ->  restart the "lab" task
+//   changed kernel-side Python       ->  restart the notebook kernel only
+//   changed pyproject.toml           ->  `uv sync`, then restart both
+//
+// COMMENTS IN A .json FILE?
+// -------------------------
+// Yes. VS Code reads its own configuration files as JSONC ("JSON with
+// comments"). This does NOT generalise -- package.json and schema/plugin.json
+// are read by strict parsers and a comment there is a syntax error.
+// ============================================================================
+{
+  // Schema version of this file's format. Unrelated to Sandor's version.
+  "version": "2.0.0",
+
+  "tasks": [
+    // ------------------------------------------------------------------
+    // THE ONE YOU WANT: starts both servers together.
+    //
+    // It runs no command itself -- it only depends on the two real tasks
+    // below. `dependsOrder: "parallel"` starts them simultaneously rather
+    // than waiting for the first to finish (which it never would).
+    // ------------------------------------------------------------------
+    {
+      "label": "Sandor: dev",
+      "dependsOn": ["Sandor: watch (TypeScript)", "Sandor: jupyter lab"],
+      "dependsOrder": "parallel",
+      "group": {
+        "kind": "build",
+        // Makes this the default build task, i.e. the one bound to Ctrl+Shift+B.
+        "isDefault": true
+      },
+      // An empty matcher means "do not scan this task's output for errors".
+      // Required, or VS Code prompts about it on every run.
+      "problemMatcher": []
+    },
+
+    // ------------------------------------------------------------------
+    // TypeScript watch. Recompiles src/ -> lib/ and rebuilds the labextension
+    // bundle on every save. Leave it running all day.
+    //
+    // `uv run` is how every command in this project is invoked -- there is no
+    // activation step (DESIGN.md D17). It resolves .venv itself.
+    // ------------------------------------------------------------------
+    {
+      "label": "Sandor: watch (TypeScript)",
+      "type": "shell",
+      "command": "uv run jlpm watch",
+
+      // Tells VS Code this task never exits on its own, so it should not be
+      // treated as "finished" or re-run automatically.
+      "isBackground": true,
+
+      "presentation": {
+        // Give this task its own terminal, reused across runs rather than
+        // spawning a new one each time.
+        "panel": "dedicated",
+        // Terminals sharing a `group` are shown split side by side.
+        "group": "sandor-dev",
+        "reveal": "always",
+        // Do not steal keyboard focus when it starts.
+        "focus": false,
+        // Print the command being run, so the terminal is self-documenting.
+        "echo": true
+      },
+
+      // Left empty deliberately. The obvious choice is "$tsc-watch", which
+      // would route TypeScript errors into the Problems panel -- but `jlpm
+      // watch` runs TWO watchers concurrently (tsc and jupyter-builder) and
+      // their interleaved output confuses the matcher. Read errors in the
+      // terminal instead. Worth revisiting if the interleaving is ever fixed.
+      "problemMatcher": []
+    },
+
+    // ------------------------------------------------------------------
+    // The JupyterLab server. Serves the browser UI, and hosts Sandor's Python
+    // server extension (sandor/routes.py) in its own process.
+    // ------------------------------------------------------------------
+    {
+      "label": "Sandor: jupyter lab",
+      "type": "shell",
+      "command": "uv run jupyter lab",
+      "isBackground": true,
+      "presentation": {
+        "panel": "dedicated",
+        "group": "sandor-dev",
+        "reveal": "always",
+        "focus": false,
+        "echo": true
+      },
+      "problemMatcher": []
+    },
+
+    // ------------------------------------------------------------------
+    // STOP. Shuts down any JupyterLab server and any TypeScript/webpack
+    // watcher belonging to THIS repository.
+    //
+    // Two ways to stop, and they are complementary:
+    //
+    //   a) This task. Works regardless of who started the processes -- a
+    //      terminal you opened by hand, a previous VS Code window, or a
+    //      server orphaned by a crash. That last case is the common one:
+    //      a stale server holding port 8888 is why `jupyter lab` sometimes
+    //      silently opens on 8889 instead.
+    //
+    //   b) Ctrl+Shift+P -> "Tasks: Terminate Task" -> "All Running Tasks".
+    //      Faster, but only reaches tasks VS Code itself started.
+    //
+    // The script is strictly scoped to processes rooted in this repository
+    // -- see tools/stop_dev.py for exactly how it decides, and for why it
+    // cannot accidentally kill VS Code or your other Jupyter sessions.
+    // ------------------------------------------------------------------
+    {
+      "label": "Sandor: stop",
+      "type": "shell",
+      "command": "uv run python tools/stop_dev.py",
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "always",
+        "focus": false,
+        "echo": true
+      },
+      "problemMatcher": []
+    },
+
+    // ------------------------------------------------------------------
+    // Convenience wrappers for the test suites. Nothing you could not type,
+    // but they keep the exact invocations discoverable in one place.
+    // See src/__tests__/sandor.spec.ts for what each suite is FOR.
+    // ------------------------------------------------------------------
+    {
+      "label": "Sandor: test (Python)",
+      "type": "shell",
+      "command": "uv run pytest",
+      "group": "test",
+      "presentation": { "panel": "dedicated", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Sandor: test (TypeScript)",
+      "type": "shell",
+      "command": "uv run jlpm test",
+      "group": "test",
+      "presentation": { "panel": "dedicated", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Sandor: lint",
+      "type": "shell",
+      "command": "uv run jlpm lint",
+      "presentation": { "panel": "dedicated", "reveal": "always" },
+      "problemMatcher": []
+    }
+  ]
+}
